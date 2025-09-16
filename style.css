@@ -1,0 +1,39 @@
+header {
+    background-color: #6699ff;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 15px;
+    margin-bottom: 20px;
+}
+
+body {
+    padding-bottom: 100px; /* adjust to footer height */
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 20px;
+}
+
+#task-form {
+    margin-bottom: 20px;
+}
+
+footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 20px 10px;
+    border: 1px solid #aaaa;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;  /* Horizontal centering */
+    align-items: center;      /* Vertical centering */
+    text-align: center;
+}
