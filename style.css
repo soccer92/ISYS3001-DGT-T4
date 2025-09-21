@@ -64,6 +64,46 @@ nav .logo {
     filter: grayscale(100%);
 }
 
+/* Main Content */
+main {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+/* Section */
+section {
+    display: flex;
+    flex-direction: row;
+    padding: 12px;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+section form {
+    display: flex;
+    width: 100%;
+}
+
+section form input {
+    flex: 1;
+    padding: 8px;
+    margin-right: 8px;
+    border: 1px solid #333;
+    font-size: 10pt;
+    box-sizing: border-box;
+}
+
+section form button {
+    padding: 8px;
+    font-size: 24pt;
+    border: 1px solid #333;
+    color: #6699ff;
+    cursor: pointer;
+    height: auto; /* Ensures it matches the input height. */
+}
+
 /* Footer */
 footer {
     /* Grace generated these lines, unless otherwise noted. */
