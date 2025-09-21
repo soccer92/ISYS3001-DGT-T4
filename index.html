@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Task Flow</title>
-    <link rel="stylesheet" href="style.css"/>
+    <link rel="stylesheet" href="style.css">
   </head>
   <body>
     <!-- Nav -->
@@ -21,22 +21,28 @@
       <a href="index.html" class="application-title">Task Flow</a>
       <img src="images/Task-Flow-Logo.png" alt="Task Flow Logo" class="logo">
     </nav>
+    
     <!-- Main Content -->
     <main>
       <!-- Add New "Quick" Task -->
-       <section>
+      <section>
         <form>
           <input type="text" id="new-task" name="new-task" placeholder="Add a new task here" required>
           <button type="submit" title="Click here to add your task to the system.">+</button>
         </form>
-       </section>
+      </section>
+
+      <!-- Task List -->
+      <section class="task-list"></section>
     </main>
+    
     <!-- Footer -->
     <footer>
       <p><b>Completion Status:</b></p>
       <div class="progress-wheel"></div>
       <p>Keep up the Good Work!</p>
     </footer>
+  
   <script>
     function hamburgerNavToggle() {
       var hamburgerLinks = document.getElementsByClassName("hamburger")[0];
