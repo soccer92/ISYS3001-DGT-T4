@@ -11,6 +11,75 @@ body {
     background: #cdebf9;
 }
 
+/* Login */
+.login {
+    position: absolute;
+    overflow: hidden;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+}
+
+.login .background {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background-image: url(images/Timber.jpg);
+    background-size: cover;
+    background-position: center;
+}
+
+.login .login-form {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.6);
+    padding: 12px;
+    width: 300px;
+}
+
+.login .login-form h2 {
+    color: #6699ff;
+    text-align: center;
+    margin: 16px 0;
+}
+
+.login .login-form form {
+    display: flex;
+    flex-direction: column;
+}
+
+.login .login-form form label {
+    color: #fff;
+    text-align: left;
+    text-transform: uppercase;
+    font-size: 8pt;
+}
+
+.login .login-form form input {
+    padding: 8px;
+    border: none;
+    margin: 8px 0;
+    font-size: 8pt;
+}
+
+.login .login-form form button {
+    padding: 8px;
+    margin: 16px 0;
+    font-size: 10pt;
+    background: #6699ff;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+}
+
 /* Nav */
 nav {
     display: flex;
