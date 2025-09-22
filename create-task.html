@@ -26,9 +26,24 @@
     <main>
       <section>
         <!-- Add New Task (in-detail) -->
-        <form>
-          <label for="task-title">Task Title:</label>
-          <input type="text" id="task-title" name="task-title" placeholder="Task Title" required>
+        <form class="task-create">
+          <!-- Task Title -->
+          <div class="input-wrapper">
+            <label for="task-title">Task Title:</label>
+            <input type="text" id="task-title" name="task-title" placeholder="Task Title" required>
+          </div>
+          <!-- Task Description -->
+          <div class="input-wrapper">
+            <label for="task-description">Task Description:</label>
+            <textarea id="task-description" name="task-description" placeholder="Task Description" required></textarea>
+          </div>
+          <!-- Due Date -->
+          <div class="input-wrapper">
+            <label for="due-date">Due Date:</label>
+            <input type="date" id="due-date" name="due-date" required>
+          </div>
+          <!-- Submit Form -->
+          <input type="submit" value="Create Task">
         </form>
       </section>
     </main>
