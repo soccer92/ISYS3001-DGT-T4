@@ -155,6 +155,14 @@ section form {
     width: 100%;
 }
 
+section form label {
+    color: #000;
+    font-size: 10pt;
+    margin-right: 8px;
+    display: flex;
+    align-items: center;
+}
+
 section form input {
     flex: 1;
     padding: 8px;
