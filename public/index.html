@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
+      <meta charset="utf-8"/>
+      <meta name="viewport" content="width=device-width,initial-scale=1"/>
       <title>Task Flow</title>
       <link rel="stylesheet" href="style.css"/>
+      <script src="app.js" defer></script>
   </head>
-  <script>
-    // javascript can go here
-  </script>
   <body>
     <!-- Header -->
     <header>
@@ -17,22 +17,19 @@
 
   <div class="container">
     <!-- Task Input Form -->
-    <form id="task-form">
-      <input type="text" id="task-input" placeholder="Insert Text"/>
-      <button id="add-button">+</button>
+    <form id="task-form" autocomplete="off">
+      <input type="text" id="task-input" placeholder="Insert Text" required maxlength="200"/>
+      <button id="add-button" type="submit" aria-label="Add task">+</button>
     </form>
     <!-- Task List -->
-    <section id="task-list">
-        <div class="task"><span>Task</span></div>
-    </section>
+    <ul id="task-list" aria-live="polite"></ul>
   </div>
 
   <!-- Task Completion Overview -->
   <footer>
-    Completion: <strong>50%</strong>
+    Completion: <strong id="completion-text">0%</strong>
     <div class="progress-circle"></div>
     <div>Keep up the good work!</div>
   </footer>
-
   </body>
 </html>
