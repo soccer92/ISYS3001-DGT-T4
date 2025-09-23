@@ -10,7 +10,7 @@ import 'dotenv/config'; //loads enviroment variables from .env file
 import Database from 'better-sqlite3'; 
 import fs from 'fs'
 import path from 'path';
-import {fileURLToPath} from "url";
+import {fileURLToPath} from 'url';
 
 //finds where this file is located in directory
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -38,14 +38,16 @@ export function getDb() {
 
 if (process.argv.includes('--init')) {
   const db = getDb();
-  const schemaSQL = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
+  const schemaPath = path.join(__dirname, 'schema.sql');
+  const schemaSQL = fs.readFileSync(schemaPath, 'utf8');
   db.exec(schemaSql);
   console.log('DB initialised at ', DB_PATH);
 }
 
 if (process.argv.includes('--seed')) {
   const db = getDb();
-  const seedSql = fs.readFileSync(path.join(__dirname, 'seed.sql'), 'utf8');
+  const seedPath = path.join(__dirname, 'seed.sql');
+  const seedSQL = fs.readFileSync(seedPath, 'utf8');
   db.exec(seedSql);
   console.log('DB seeded with sample data');
 }
