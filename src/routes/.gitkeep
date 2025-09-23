@@ -1,8 +1,0 @@
-# Dependency directories
-node_modules/
-
-# Logs and temporary files
-*.log *.tmp
-
-# macOS system file
-.DS_Store
