@@ -1,28 +1,37 @@
-// simple webserver using express to serve html files
-// ISYS3001 - Managing Software Development A3
+/* 
+ISYS3001 - Managing Software Development A3
+-Loads .env (HOST/PORT/DB_PATH)
+-Serves stratic UI from /public
+-Mounts /api/tasks
+*/ 
 
-// import the modules
-const express=require("express"); // for a webserver (express)
-const bodyParser=require("body-parser"); // parse the body of the request
-const path=require("path"); // handle file paths
+//import the modules
+import 'dotenv/config'; //imports configs 
+import express from 'express'; // for a webserver (express)
+import {fileURLToPath} from 'url';
+import path from 'path'; // handle file paths
+import tasksRouter from './routes/tasks.js';
 
-// create a new express webserver app
-const app=express();
+//ESM-safe __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-//to parse URL-encoded data
-app.use(bodyParser.urlencoded({extended:true}));
+const app = express();
 
-//to serve static files
-app.use(express.static(__dirname));
+//Read .env with fall backs
+const PORT = parseInt(process.env.PORT || '3030', 10);
+const HOST = process.env.HOST || '127.0.0.1';
 
-//route to serve index.html (load html and send to client)
-//first endpoint - using GET message
-app.get("/",(req,res)=>{
-  // render/send the index.html file
-  res.sendFile(path.join(__dirname,"index.html"));
-});
+//body parsers
+app.use(express.json());
 
-// start running the webserver on port 3030
-app.listen(3030,()=>{
-  console.log("Server running at http://localhost:3030");
+//Server static files (index,html, app.js, style.css)
+app.use(express.static(path.join(__dirname, '../public')));
+
+//API routes
+app.use('/api/tasks', tasksRouter);
+
+//Start server
+app.listen(PORT, HOST, () => {
+  console.log('Local app running at http://${HOST}:${PORT}');
 });
