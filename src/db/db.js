@@ -39,7 +39,7 @@ export function getDb() {
 if (process.argv.includes('--init')) {
   const db = getDb();
   const schemaPath = path.join(__dirname, 'schema.sql');
-  const schemaSQL = fs.readFileSync(schemaPath, 'utf8');
+  const schemaSql = fs.readFileSync(schemaPath, 'utf8');
   db.exec(schemaSql);
   console.log('DB initialised at ', DB_PATH);
 }
@@ -47,7 +47,7 @@ if (process.argv.includes('--init')) {
 if (process.argv.includes('--seed')) {
   const db = getDb();
   const seedPath = path.join(__dirname, 'seed.sql');
-  const seedSQL = fs.readFileSync(seedPath, 'utf8');
+  const seedSql = fs.readFileSync(seedPath, 'utf8');
   db.exec(seedSql);
   console.log('DB seeded with sample data');
 }
