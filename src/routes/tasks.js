@@ -59,7 +59,7 @@ router.get('/',
 router.get('/:id',
            param('id').isString(),
            (req, res) => {
-             const v = check req, res); if (v) return v;
+             const v = (check req, res); if (v) return v;
 
              const task = getTask(req.params.id);
              if (!task) return res.status(404).json({message: 'Not found'});
