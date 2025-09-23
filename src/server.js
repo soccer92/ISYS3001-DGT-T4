@@ -19,8 +19,8 @@ const __dirname = path.dirname(__filename);
 const app = express();
 
 //Read .env with fall backs
-const PORT = parseInt(process.env.PORT || '3030', 10);
-const HOST = process.env.HOST || '127.0.0.1';
+const PORT = Number(process.env.PORT ?? 3030);
+const HOST = process.env.HOST ?? 'localhost';
 
 //body parsers
 app.use(express.json());
@@ -33,5 +33,5 @@ app.use('/api/tasks', tasksRouter);
 
 //Start server
 app.listen(PORT, HOST, () => {
-  console.log('Local app running at http://${HOST}:${PORT}');
+  console.log(`Local app running at http://${HOST}:${PORT}`);
 });
