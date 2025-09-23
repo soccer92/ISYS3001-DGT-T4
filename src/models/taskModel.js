@@ -68,4 +68,36 @@ return {total, limit, offset, items};
 }
 
 //GET a single TASK by ID
+export function getTask(id) {
+  return. db.prepare('SELECT * FROM tasks WHERE id = ?').get(id);
+}
 
+//UPDATE a task
+export function updateTask(id, patch) {
+  const cur = getTask(id);
+  if (!cur) return null;
+
+  //Merge old row with updated fields (might add groups later)
+  const next = {
+    ...cur,
+    ...patch,
+    title: patch.title !== undefined ? String(patch.title).trim() : cur.title,
+    updated_at: new Date().toISOString()
+  };
+
+//Persist merge record
+db.prepare(`
+  UPDATE tasks SET
+  title=@title, status=@status, priority=@priority, due_at=@due_at, user_id=@user_id, updated_at=@updated_at
+  WHERE id=@id
+  `).run(next);
+
+  return next;
+}
+
+//DELETE a task by ID
+export function deleteTask(id) {
+  const info = db.prepare('DELETE FROM tasks WHERE id = ?').run(id);
+  return info.changes > 0; //true if a row was deleted
+}
+  
