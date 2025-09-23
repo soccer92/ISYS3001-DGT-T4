@@ -40,9 +40,9 @@ async function deleteTask(id) {
 
 //Render the current list pf tasks to <ul>
 function render(tasks) {
-  const ul = documetn.getElementById('task-list');
+  const ul = document.getElementById('task-list');
   ul.innerHTML = (tasks || []).map(t => `
-  <li data-d="${t.id}">
+  <li data-id="${t.id}">
     <strong>[${t.priority}]</strong> ${t.title}
       <em>(${t.status})</em>
       <button class="done">done</button>
