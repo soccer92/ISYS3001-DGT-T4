@@ -3,7 +3,7 @@ Express router for /api/tasks
 Delegates DB work to the model layer in taskModel.js
 */
 
-import express from 'express';
+import {Router} from 'express';
 import {body, query, param, validationResult} from 'express-validator';
 import {
   createTask,
@@ -13,7 +13,7 @@ import {
   deleteTask
 } from '../models/taskModel.js';
 
-const router = express.Router();
+const router = Router();
 
 //return 400 with validation message when needed
 function check(req, res) {
@@ -36,28 +36,28 @@ router.post('/',
 
 //GET /api/tasks (list with filters)
 router.get('/',
-           query('limit').optional().isInt({min:1, max:100}),
-           query('offset').optional().isInt({min:0}),
+           query('limit').optional().isInt({min:1, max:100}).toInt(),
+           query('offset').optional().isInt({min:0}).toInt(),
            query('status').optional().isIn(['todo','in_progress','done']),
            query('priority').optional().isIn(['low','medium','high']),
+           query('q').optional().isString().trim().isLength({min:1, max:200}),
            (req, res) => {
              const v = check(req, res); if (v) return v;
 
              //Filters
-             const {limit, offset, status, priority, q} = req.query;
-             const data = listTasks({
-               limit: limit ? parseInt(limit, 10) : 20,
-               offset: offset ? parseInt(offset, 10) : 0,
-               status, priority, q
-             });
+             const {limit=20, offset=0, status, priority, q} = req.query;
+             const data = listTasks({limit, offset, status, priority, q});
 
-             res.json(data);
+             //Normalise shape of array
+             const normalised = Array.isArray(data) ? {total: data.length, limit, offset, items: data} : data;
+             
+             res.json(normalised);
            }
 );
 
 //GET /api/tasks/:id (read single)
 router.get('/:id',
-           param('id').isString(),
+           param('id').isString().trim().isLength({min: 8, max: 128}),
            (req, res) => {
              const v = check(req, res); if (v) return v;
 
@@ -69,9 +69,15 @@ router.get('/:id',
 
 //PATCH /api/tasks/:id (update)
 router.patch('/:id',
-             param('id').isString(),
-             (rq, res) => {
-               const task = updateTask(req.params.id, req.body);
+             param('id').isString().trim().isLength({min: 8, max: 128}),
+             body('title').optional().isString().trim().isLength({ min: 1, max: 200 }),
+             body('status').optional().isIn(['todo', 'in_progress', 'done']),
+             body('priority').optional().isIn(['low', 'medium', 'high']),
+             body('done').optional().isBoolean(),
+             (req, res) => {
+               const v = check(req, res); if (v) return v;
+               
+               const task = updateTask(req.params.id, req.body || {});
                if (!task) return res.status(404).json({message: 'Not found'});
                res.json(task);
              }
@@ -79,8 +85,10 @@ router.patch('/:id',
 
 //DELETE /api/tasks/:id (delete)
 router.delete('/:id',
-              param('id').isString(),
+              param('id').isString().trim().isLength({min: 8, max: 128}),
               (req, res) => {
+                const v = check(req, res); if (v) return v;
+                
                 const ok = deleteTask(req.params.id);
                 if (!ok) return res.status(404).json({message: 'Not found'});
                 res.status(204).send();
