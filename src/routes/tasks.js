@@ -24,9 +24,9 @@ function check(req, res) {
 //POST /api/tasks (create)
 router.post('/',
       //Validates what is required
-      body.('title').isString().trim().isLength({min:1, max:200}),
-      body.('status').optional().isIn(['todo','in_progress','done']),
-      body.('priority').optional().isIn(['low','medium','high']),
+      body('title').isString().trim().isLength({min:1, max:200}),
+      body('status').optional().isIn(['todo','in_progress','done']),
+      body('priority').optional().isIn(['low','medium','high']),
       (req, res) => {
         const v = check(req, res); if (v) return v;
         const task = createTask(req.body);
