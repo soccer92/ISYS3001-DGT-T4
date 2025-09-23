@@ -69,7 +69,7 @@ return {total, limit, offset, items};
 
 //GET a single TASK by ID
 export function getTask(id) {
-  return. db.prepare('SELECT * FROM tasks WHERE id = ?').get(id);
+  return db.prepare('SELECT * FROM tasks WHERE id = ?').get(id);
 }
 
 //UPDATE a task
