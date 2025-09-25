@@ -1,39 +1,215 @@
-header {
-    background-color: #6699ff;
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 15px;
-    margin-bottom: 20px;
+* {
+    box-sizing: border-box;
 }
 
 body {
-    padding-bottom: 100px; /* adjust to footer height */
-}
-
-.container {
     display: flex;
     flex-direction: column;
+    margin: 0;
+    padding-bottom: 100px; /* Adjust for footer height */
+    font-family: "Roboto", sans-serif;
+    background: #cdebf9;
+}
+
+/* Login */
+.login {
+    position: absolute;
+    overflow: hidden;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+}
+
+.login .background {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background-image: url(images/Timber.jpg);
+    background-size: cover;
+    background-position: center;
+}
+
+.login .login-form {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.6);
+    padding: 12px;
+    width: 300px;
+}
+
+.login .login-form h2 {
+    color: #6699ff;
+    text-align: center;
+    margin: 16px 0;
+}
+
+.login .login-form form {
+    display: flex;
+    flex-direction: column;
+}
+
+.login .login-form form label {
+    color: #fff;
+    text-align: left;
+    text-transform: uppercase;
+    font-size: 8pt;
+}
+
+.login .login-form form input {
+    padding: 8px;
+    border: none;
+    margin: 8px 0;
+    font-size: 8pt;
+}
+
+.login .login-form form button {
+    padding: 8px;
+    margin: 16px 0;
+    font-size: 10pt;
+    background: #6699ff;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+/* Nav */
+nav {
+    display: flex;
+    flex-direction: row;
+    position: relative;
+    background: #6699ff;
+    padding: 0 8px;
+    justify-content: space-between;
     align-items: center;
-    margin: 20px;
+    color: #fff;
 }
 
-#task-form {
-    margin-bottom: 20px;
+nav .hamburger {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    background: #6699ff;
 }
 
+nav .hamburger a {
+    display: block;
+    color: #000;
+    text-decoration: none;
+    padding: 12px;
+}
+
+nav a {
+    text-decoration: none;
+    padding: 12px;
+}
+
+nav a.application-title {
+    color: #fff;
+    font-size: 18pt;
+    font-weight: bold;
+}
+
+nav a:not(.application-title) {
+    color: #000;
+    font-size: 12pt;
+}
+
+nav a:not(.application-title):hover {
+    background: #eee;
+}
+
+nav .logo {
+    height: 40px;
+    filter: grayscale(100%);
+}
+
+/* Main Content */
+main {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+/* Section */
+section {
+    display: flex;
+    flex-direction: row;
+    padding: 12px;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+section form {
+    display: flex;
+    width: 100%;
+}
+
+section form.task-create {
+    flex-direction: column;
+}
+
+section .task-create .input-wrapper {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+section form label, section .task-create .input-wrapper label {
+    color: #000;
+    font-size: 10pt;
+    margin-right: 8px;
+    display: flex;
+    align-items: center;
+    width: 200px;
+}
+
+section form input, section form textarea {
+    flex: 1;
+    padding: 8px;
+    margin-right: 8px;
+    border: 1px solid #333;
+    font-size: 10pt;
+    box-sizing: border-box;
+}
+
+section form button {
+    padding: 8px;
+    font-size: 24pt;
+    border: 1px solid #333;
+    color: #6699ff;
+    cursor: pointer;
+    height: auto; /* Ensures it matches the input height. */
+}
+
+/* Footer */
 footer {
+    /* Grace generated these lines, unless otherwise noted. */
+    display: flex;
+    flex-direction: column;
     position: fixed;
     bottom: 0;
     left: 0;
     width: 100%;
-    padding: 20px 10px;
-    border: 1px solid #aaaa;
-
-    display: flex;
-    flex-direction: column;
-    justify-content: center;  /* Horizontal centering */
-    align-items: center;      /* Vertical centering */
+    background: #333; /* Tom added the background to match the homepage wireframe. */
+    padding: 12px;
+    align-items: center;
+    justify-content: center;
     text-align: center;
+}
+
+footer p {
+    color: #fff;
+    margin: 8px 0;
+    font-size: 10pt;
 }

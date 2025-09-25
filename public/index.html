@@ -1,35 +1,58 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-AU">
   <head>
-      <meta charset="utf-8"/>
-      <meta name="viewport" content="width=device-width,initial-scale=1"/>
-      <title>Task Flow</title>
-      <link rel="stylesheet" href="style.css"/>
-      <script src="app.js" defer></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home &#8212; Task Flow</title>
+    <link rel="stylesheet" href="style.css">
   </head>
   <body>
-    <!-- Header -->
-    <header>
-        <div class="hamburger"></div>
-        <h1>Task Flow</h1>
-        <div class="logo-box">Logo</div>
-    </header>
+    <!-- Nav -->
+    <nav>
+      <!-- Hamburger Functionality -->
+      <div class="hamburger">
+        <a href="create-task.html">Create a Task</a>
+        <a href="">View Tasks</a>
+        <a href="">Log out</a>
+      </div>
+      <a href="javascript:void(0);" onclick="hamburgerNavToggle()">
+        <img src="images/Hamburger.svg" alt="Hamburger Menu Icon">
+      </a>
+      <a href="index.html" class="application-title">Task Flow</a>
+      <img src="images/Task-Flow-Logo.png" alt="Task Flow Logo" class="logo">
+    </nav>
+    
+    <!-- Main Content -->
+    <main>
+      <!-- Add New "Quick" Task -->
+      <section>
+        <form>
+          <input type="text" id="new-task" name="new-task" placeholder="Add a new task here" required>
+          <button type="submit" title="Click here to add your task to the system.">+</button>
+        </form>
+      </section>
 
-  <div class="container">
-    <!-- Task Input Form -->
-    <form id="task-form" autocomplete="off">
-      <input type="text" id="task-input" placeholder="Insert Text" required maxlength="200"/>
-      <button id="add-button" type="submit" aria-label="Add task">+</button>
-    </form>
-    <!-- Task List -->
-    <ul id="task-list" aria-live="polite"></ul>
-  </div>
-
-  <!-- Task Completion Overview -->
-  <footer>
-    Completion: <strong id="completion-text">0%</strong>
-    <div class="progress-circle"></div>
-    <div>Keep up the good work!</div>
-  </footer>
+      <!-- Task List -->
+      <section class="task-list"></section>
+    </main>
+    
+    <!-- Footer -->
+    <footer>
+      <p><b>Completion Status:</b></p>
+      <div class="progress-wheel"></div>
+      <p>Keep up the Good Work!</p>
+    </footer>
+  
+  <script>
+    function hamburgerNavToggle() {
+      var hamburgerLinks = document.getElementsByClassName("hamburger")[0];
+      if (hamburgerLinks.style.display === "block") {
+        hamburgerLinks.style.display = "none";
+      } 
+      else {
+        hamburgerLinks.style.display = "block";
+      }
+    }
+  </script>
   </body>
 </html>
