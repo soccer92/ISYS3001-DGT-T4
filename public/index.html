@@ -26,14 +26,16 @@
     <main>
       <!-- Add New "Quick" Task -->
       <section>
-        <form>
-          <input type="text" id="new-task" name="new-task" placeholder="Add a new task here" required>
+        <form id="task-form">
+          <input type="text" id="task-input" placeholder="Add a new task here" required>
           <button type="submit" title="Click here to add your task to the system.">+</button>
         </form>
       </section>
 
       <!-- Task List -->
-      <section class="task-list"></section>
+      <section>
+        <ul id="task-list"></ul>
+      </section>
     </main>
     
     <!-- Footer -->
@@ -43,16 +45,16 @@
       <p>Keep up the Good Work!</p>
     </footer>
   
-  <script>
-    function hamburgerNavToggle() {
-      var hamburgerLinks = document.getElementsByClassName("hamburger")[0];
-      if (hamburgerLinks.style.display === "block") {
-        hamburgerLinks.style.display = "none";
-      } 
-      else {
-        hamburgerLinks.style.display = "block";
+    <script>
+      function hamburgerNavToggle() {
+        var hamburgerLinks = document.getElementsByClassName("hamburger")[0];
+        if (hamburgerLinks.style.display === "block") {
+          hamburgerLinks.style.display = "none";
+        } else {
+          hamburgerLinks.style.display = "block";
+        }
       }
-    }
-  </script>
+    </script>
+    <script src="app.js"></script>
   </body>
 </html>
