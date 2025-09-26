@@ -5,33 +5,33 @@ ISYS3001 - Managing Software Development A3
 -Mounts /api/tasks
 */ 
 
-//import the modules
+// Import the modules.
 import 'dotenv/config'; //imports configs 
 import express from 'express'; // for a webserver (express)
 import {fileURLToPath} from 'url';
 import path from 'path'; // handle file paths
 import tasksRouter from './routes/tasks.js';
 
-//ESM-safe __dirname
+// ESM-safe __dirname.
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
 
-//Read .env with fall backs
+// Read .env with fallbacks.
 const PORT = Number(process.env.PORT ?? 3030);
 const HOST = process.env.HOST ?? 'localhost';
 
-//body parsers
+// Body parsers.
 app.use(express.json());
 
-//Server static files (index,html, app.js, style.css)
+// Server static files (index,html, app.js, style.css).
 app.use(express.static(path.join(__dirname, '../public')));
 
-//API routes
+// API routes.
 app.use('/api/tasks', tasksRouter);
 
-//Start server
+// Start server.
 app.listen(PORT, HOST, () => {
   console.log(`Local app running at http://${HOST}:${PORT}`);
 });
