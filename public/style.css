@@ -6,7 +6,7 @@ body {
     display: flex;
     flex-direction: column;
     margin: 0;
-    padding-bottom: 100px; /* Adjust for footer height */
+    padding-bottom: 100px; /* Adjust for footer height. */
     font-family: "Roboto", sans-serif;
     background: #cdebf9;
 }
@@ -190,6 +190,49 @@ section form button {
     color: #6699ff;
     cursor: pointer;
     height: auto; /* Ensures it matches the input height. */
+}
+
+#task-list {
+    list-style: none;
+    margin: 16px 0;
+    padding: 0;
+    width: 100%;
+}
+
+#task-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    margin: 8px 0;
+    background: #fff;
+    border-left: 4px solid #333;
+    font-size: 10pt;
+}
+
+#task-list li[data-priority="high"] {
+    border-left-color: #ff4d4d !important; /* Red for high priority. */
+}
+
+#task-list li[data-priority="medium"] {
+    border-left-color: #ffcc00 !important; /* Yellow for medium priority. */
+}
+
+#task-list li[data-priority="low"] {
+    border-left-color: #66cc66 !important; /* Green for low priority. */
+}
+
+#task-list li .task-actions {
+  margin-left: auto; /* push action buttons to the far right. */
+  display: flex;
+  gap: 8px;
+}
+
+#task-list li button {
+    padding: 8px;
+    border: 1px solid #333;
+    cursor: pointer;
 }
 
 /* Footer */
