@@ -56,9 +56,10 @@ function escapeHtml(s) {
 // Render the current list of tasks to <ul>.
 function render(tasks) {
 
-  const isViewPage = window.location.pathname.includes('view-task.html');
+  const isViewPage = window.location.pathname.includes('view-task.html'); // includes edit btn on view task page only
 
   const ul = document.getElementById('task-list');
+  if (!ul) return; // skips rendering on pages without a task list (for updateCompletionStatus() to work).
 
   // Map values to display labels
   const priorityLabels = {
@@ -112,6 +113,22 @@ async function fetchTaskById(id) {
 async function refresh() {
   const tasks = await fetchTasks();
   render(tasks);
+  updateCompletionStatus();
+}
+
+// Update the completion status in the footer 
+async function updateCompletionStatus() {
+  try {
+    const tasks = await fetchTasks(); // fetch all tasks from API
+    const completed = tasks.filter(t => t.status === 'done').length; // count completed tasks
+    const percent = tasks.length > 0 ? Math.round((completed / tasks.length) * 100) : 0; // calculates percentage
+
+    document.getElementById('completion-status').textContent = `${percent}%`;
+
+  } catch (err) {
+    console.error('Failed to update completion status', err);
+    document.getElementById('completion-status').textContent = 'Error';
+  }
 }
 
 // Hook up DOM events on load.
