@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Tasks &#8212; Task Flow</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <!-- Nav -->
+    <nav>
+        <!-- Hamburger Functionality -->
+        <div class="hamburger">
+            <a href="create-task.html">Create a Task</a>
+            <a href="">View Tasks</a>
+            <a href="">Log out</a>
+        </div>
+        <a href="javascript:void(0);" onclick="hamburgerNavToggle()">
+            <img src="images/Hamburger.svg" alt="Hamburger Menu Icon">
+        </a>
+        <a href="index.html" class="application-title">Task Flow</a>
+        <img src="images/Task-Flow-Logo.png" alt="Task Flow Logo" class="logo">
+    </nav>
+
+    <h1>View Tasks</h1>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Display Task List -->
+        <section>
+            <ul id="task-list"></ul>
+        </section>
+        <!-- Edit Tasks -->
+
+
+        
+        <h2>Edit Task</h2>
+        <p>Select a task above to edit</p>
+        <section>
+            
+            <form id="edit-form" style="display: none;">
+                <input type="hidden" id="edit-task-id">
+                <!-- Task Title -->
+                <div class="input-wrapper">
+                    <label for="edit-task-title">Task Title:</label>
+                    <input type="text" id="edit-task-title" required>
+                </div>
+                <!-- Task Description -->
+                <div class="input-wrapper">
+                    <label for="edit-task-desc">Task Description:</label>
+                    <textarea id="edit-task-desc" name="edit-task-desc"></textarea>
+                </div>
+                <!-- Task Priority -->
+                <div class="input-wrapper">
+                    <label for="edit-task-priority">Priority:</label>
+                    <select id="edit-task-priority" required>
+                        <option value="high">High Priority</option>
+                        <option value="medium">Medium Priority</option>
+                        <option value="low">Low Priority</option>
+                    </select>
+                </div>
+                <!-- Due Date -->
+                <div class="input-wrapper">
+                    <label for="edit-date">Due Date:</label>
+                    <input type="date" id="edit-date" name="edit-date">
+                </div>
+                <!-- Task Completion Status -->
+                <div class="input-wrapper">
+                    <label for="edit-task-status">Status:</label>
+                    <select id="edit-task-status" required>
+                        <option value="todo">To Do</option>
+                        <option value="in_progress">In Progress</option>
+                        <option value="done">Completed</option>
+                    </select>
+                </div>                
+                <!-- Submit Form -->
+                <button type="submit">Save Changes</button>
+                <button type="button" id="cancel-edit">Cancel</button>
+
+            </form>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <p><b>Completion Status:</b></p>
+        <div class="progress-wheel"></div>
+        <p>Keep up the Good Work!</p>
+    </footer>
+
+    <script>
+        function hamburgerNavToggle() {
+            var hamburgerLinks = document.getElementsByClassName("hamburger")[0];
+            if (hamburgerLinks.style.display === "block") {
+                hamburgerLinks.style.display = "none";
+            } else {
+                hamburgerLinks.style.display = "block";
+            }
+        }
+    </script>
+
+    <script src="app.js"></script>
+
+    <script>
+        const editForm = document.getElementById('edit-form');
+
+        const editTaskId = document.getElementById('edit-task-id');
+        const editTaskTitle = document.getElementById('edit-task-title');
+        const editTaskDesc = document.getElementById('edit-task-desc');
+        const editTaskPriority = document.getElementById('edit-task-priority');
+        const editDate = document.getElementById('edit-date');
+        const editTaskStatus = document.getElementById('edit-task-status');
+
+        const cancelEdit = document.getElementById('cancel-edit');
+
+        // edit-task-title, edit-task-desc, edit-task-priority, edit-date, edit-task-status
+
+        // reuse refresh() from app.js
+        refresh();
+
+        // show form when edit button is clicked
+        editForm.addEventListener('submit', async (e) => {
+
+            e.preventDefault(); // stops page from reloading
+
+            try {
+                await fetch(`/api/tasks/${editTaskId.value}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title: editTaskTitle.value,
+                        description: editTaskDesc.value,
+                        priority: editTaskPriority.value,
+                        dueDate: editDate.value,
+                        status: editTaskStatus.value
+                        // edit-task-title, edit-task-desc, edit-task-priority, edit-date, edit-task-status
+                    })
+                });
+                editForm.style.display = 'none';
+                refresh();
+            } catch (err) {
+                alert('Failed to update task: ' + err.message);
+            }
+        });
+        
+        // hide form when cancel is clicked
+        cancelEdit.addEventListener('click', () => {
+            editForm.style.display = 'none';
+        });
+
+    </script>
+</body>
+
+</html>

@@ -48,13 +48,16 @@ async function deleteTask(id) {
 
 // Escape special HTML characters so user input is displayed safely
 function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, c => ({ 
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' 
+  return String(s).replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
   }[c]));
 }
 
 // Render the current list of tasks to <ul>.
 function render(tasks) {
+
+  const isViewPage = window.location.pathname.includes('view-task.html');
+
   const ul = document.getElementById('task-list');
 
   // Map values to display labels
@@ -90,11 +93,19 @@ function render(tasks) {
         <em>${escapeHtml(st)}</em>
         <div class="task-actions">
           ${progressBtn}
+          ${isViewPage ? `<button type="button" class="edit">Edit</button>` : ''}
           <button type="button" class="del">Delete</button>
         </div>
       </li>`;
     })
     .join('');
+}
+
+// GET /api/tasks:id (fetch a single task by ID
+async function fetchTaskById(id) {
+  const res = await fetch(`/api/tasks/${id}`);
+  if (!res.ok) throw new Error(`Failed to fetch task (${res.status})`);
+  return res.json();
 }
 
 // Refresh the UI from the API.
@@ -135,6 +146,21 @@ window.addEventListener('DOMContentLoaded', () => {
       } else if (e.target.classList.contains('del')) {
         await deleteTask(id);
         await refresh();
+      } else if (e.target.classList.contains('edit')) {
+
+        // Fetch the task details from the API
+        const task = await fetchTaskById(id);
+
+        // Populate the task editing form with API values
+        document.getElementById('edit-task-id').value = task.id;
+        document.getElementById('edit-task-title').value = task.title || '';
+        document.getElementById('edit-task-desc').value = task.description || '';
+        document.getElementById('edit-task-priority').value = task.priority || 'medium';
+        document.getElementById('edit-date').value = task.dueDate || '';
+        document.getElementById('edit-task-status').value = task.status || 'todo';
+
+        document.getElementById('edit-form').style.display = 'block';
+
       }
     } catch (err) {
       console.error(err);

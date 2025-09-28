@@ -140,6 +140,10 @@ main {
     flex-grow: 1;
 }
 
+h1, h2, p {
+    text-align: center;
+}
+
 /* Section */
 section {
     display: flex;
@@ -159,13 +163,13 @@ section form.task-create {
     flex-direction: column;
 }
 
-section .task-create .input-wrapper {
+section .task-create .input-wrapper,  #edit-form .input-wrapper{
     display: flex;
     align-items: center;
     margin-bottom: 12px;
 }
 
-section form label, section .task-create .input-wrapper label {
+section form label, section .task-create .input-wrapper label, #edit-form label {
     color: #000;
     font-size: 10pt;
     margin-right: 8px;
@@ -174,7 +178,7 @@ section form label, section .task-create .input-wrapper label {
     width: 200px;
 }
 
-section form input, section form textarea {
+section form input, section form textarea, #edit-form input, #edit-form textarea, #edit-form select {
     flex: 1;
     padding: 8px;
     margin-right: 8px;
@@ -183,7 +187,7 @@ section form input, section form textarea {
     box-sizing: border-box;
 }
 
-section form button {
+#quick-add-btn {
     padding: 8px;
     font-size: 24pt;
     border: 1px solid #333;
@@ -229,7 +233,7 @@ section form button {
   gap: 8px;
 }
 
-#task-list li button {
+#task-list li button,  #edit-form button{
     padding: 8px;
     border: 1px solid #333;
     cursor: pointer;
