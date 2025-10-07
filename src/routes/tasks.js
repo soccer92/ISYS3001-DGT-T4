@@ -14,6 +14,9 @@ import {
 } from '../models/taskModel.js';
 import { requireAuth } from '../middleware/auth.js';
 
+// const { sendEmail } = require('../emailService');
+import { sendEmail } from '../emailService.js';
+
 const router = Router();
 
 // Return 400 with validation message when needed.
@@ -37,6 +40,15 @@ router.post(
     if (v) return v;
 
     const task = createTask({ ...req.body, user_id: req.user.id });
+
+    // send email notification
+    sendEmail(
+      req.body.userEmail || process.env.GMAIL_USER, // fallback
+      'New Task Created',
+      `Your new task "${task.title}" has been created with priority ${task.priority ?? "none"}.`
+      // `Your new task "${task.title}" has been created with priority ${task.priority ?? "none"} and is due on ${dueDate}.`
+    );
+
     res.status(201).json(task);
   }
 );
