@@ -25,7 +25,8 @@ router.post(
     body('lastName').isString().trim().isLength({ min: 1 }),
     body('phone').optional().isString().trim(),
     (req, res) => {
-        const v = check(req, res); if (v) return v;
+        const v = check(req, res);
+        if (v) return v;
 
         try {
             // createUser handles hashing + persistence
@@ -52,7 +53,8 @@ router.post(
     body('email').isEmail().normalizeEmail(),
     body('password').isString().isLength({ min: 1 }),
     (req, res) => {
-        const v = check(req, res); if (v) return v;
+        const v = check(req, res);
+        if (v) return v;
 
         // verifyUser returns the user if password matches, or null/undefined otherwise.
         const user = verifyUser(req.body.email, req.body.password);

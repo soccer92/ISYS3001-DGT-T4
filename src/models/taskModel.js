@@ -21,7 +21,7 @@ export function createTask(body) {
     status: body.status || 'todo', // default status
     priority: body.priority || 'low', // default priority
     due_at: body.due_at || null,
-    user_id: body.user_id || null, // will be used later if find time to add users
+    user_id: body.user_id, // required for authentication
     created_at: now,
     updated_at: now,
   };
@@ -36,10 +36,14 @@ export function createTask(body) {
 }
 
 // LIST tasks with basic filtering.
-export function listTasks({ limit = 20, offset = 0, status, priority, q } = {}) {
+export function listTasks({ limit = 20, offset = 0, status, priority, q, userId } = {}) {
   // Collect WHERE clauses & named params.
   const where = [];
   const params = {};
+
+  // Ensure only returning the current user's tasks
+  where.push('user_id = @userId');      
+  params.userId = userId;
 
   if (status) {
     where.push('status = @status');
@@ -73,40 +77,51 @@ export function listTasks({ limit = 20, offset = 0, status, priority, q } = {}) 
 }
 
 // GET a single TASK by ID.
-export function getTask(id) {
-  return db.prepare('SELECT * FROM tasks WHERE id = ?').get(id);
+export function getTask(id, userId) {
+  return db.prepare('SELECT * FROM tasks WHERE id = ? AND user_id = ?').get(id, userId);
 }
 
-// UPDATE a task.
-export function updateTask(id, patch) {
-  const cur = getTask(id);
-  if (!cur) return null;
+// UPDATE a task by ID.
+export function updateTask(id, patch, userId) {
+    const now = new Date().toISOString();
 
-  // Merge old row with updated fields (might add groups later).
-  const next = {
-    ...cur,
-    ...patch,
-    title: patch.title !== undefined ? String(patch.title).trim() : cur.title,
-    updated_at: new Date().toISOString(),
-  };
+    // Ensure ownership.
+    const row = db.prepare('SELECT * FROM tasks WHERE id = ? AND user_id = ?').get(id, userId);
+    if (!row) return null;
 
-  // Persist merged record.
-  db.prepare(`
-    UPDATE tasks SET
-      title = @title, 
-      status = @status, 
-      priority = @priority, 
-      due_at = @due_at, 
-      user_id = @user_id, 
+    // prevents ownership/PK tampering.
+    const {
+        user_id: _ignoreUserId,
+        id: _ignoreId,
+        created_at: _ignoreCreated,
+        updated_at: _ignoreUpdated,
+        ...allowedPatch
+    } = patch || {};
+
+    // Build the next row using locked id/user_id from DB + allowed fields only.
+    const next = {
+        ...row,
+        ...allowedPatch,
+        id: row.id,
+        user_id: row.user_id,
+        updated_at: now
+    };
+
+    db.prepare(`
+    UPDATE tasks SET 
+      title = @title,
+      status = @status,
+      priority = @priority,
+      due_at = @due_at,
       updated_at = @updated_at
-    WHERE id = @id
+    WHERE id = @id AND user_id = @user_id
   `).run(next);
 
-  return next;
+    return next;
 }
 
 // DELETE a task by ID.
-export function deleteTask(id) {
-  const info = db.prepare('DELETE FROM tasks WHERE id = ?').run(id);
+export function deleteTask(id, userId) {
+  const info = db.prepare('DELETE FROM tasks WHERE id = ? AND user_id = ?').run(id, userId);;
   return info.changes > 0; // True if a row was deleted.
 }

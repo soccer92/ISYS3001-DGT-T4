@@ -12,6 +12,7 @@ import {
   updateTask,
   deleteTask
 } from '../models/taskModel.js';
+import { requireAuth } from '../middleware/auth.js';
 
 const router = Router();
 
@@ -21,17 +22,21 @@ function check(req, res) {
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 }
 
+// requireAuth sets req.user = { id, email } if valid.
+router.use(requireAuth);
+
 // POST /api/tasks (create).
 router.post(
   '/',
   body('title').isString().trim().isLength({ min: 1, max: 200 }),
   body('status').optional().isIn(['todo', 'in_progress', 'done']),
   body('priority').optional().isIn(['low', 'medium', 'high']),
+  body('due_at').optional().isISO8601(),
   (req, res) => {
     const v = check(req, res);
     if (v) return v;
 
-    const task = createTask(req.body);
+    const task = createTask({ ...req.body, user_id: req.user.id });
     res.status(201).json(task);
   }
 );
@@ -50,7 +55,7 @@ router.get(
 
     // Filters.
     const { limit = 20, offset = 0, status, priority, q } = req.query;
-    const data = listTasks({ limit, offset, status, priority, q });
+    const data = listTasks({ limit, offset, status, priority, q, userId: req.user.id });
 
     // Normalize shape of array.
     const normalized = Array.isArray(data)
@@ -69,7 +74,7 @@ router.get(
     const v = check(req, res);
     if (v) return v;
 
-    const task = getTask(req.params.id);
+    const task = getTask(req.params.id, req.user.id);
     if (!task) return res.status(404).json({ message: 'Not found' });
     res.json(task);
   }
@@ -82,12 +87,11 @@ router.patch(
   body('title').optional().isString().trim().isLength({ min: 1, max: 200 }),
   body('status').optional().isIn(['todo', 'in_progress', 'done']),
   body('priority').optional().isIn(['low', 'medium', 'high']),
-  body('done').optional().isBoolean(),
   (req, res) => {
     const v = check(req, res);
     if (v) return v;
 
-    const task = updateTask(req.params.id, req.body || {});
+    const task = updateTask(req.params.id, req.body || {}, req.user.id);
     if (!task) return res.status(404).json({ message: 'Not found' });
     res.json(task);
   }
@@ -101,7 +105,7 @@ router.delete(
     const v = check(req, res);
     if (v) return v;
 
-    const ok = deleteTask(req.params.id);
+    const ok = deleteTask(req.params.id, req.user.id);
     if (!ok) return res.status(404).json({ message: 'Not found' });
     res.status(204).send();
   }
