@@ -9,3 +9,10 @@ node_modules/
 
 # local database
 .localdb/
+
+# Visual Studio cache
+.vs/
+*.suo
+*.user
+*.userossc
+*.sln.docstates
