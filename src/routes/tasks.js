@@ -8,9 +8,11 @@ import { body, query, param, validationResult } from 'express-validator';
 import {
   createTask,
   listTasks,
+  listTasksOnDate,
   getTask,
   updateTask,
-  deleteTask
+  deleteTask,
+  deleteSeriesByTaskId
 } from '../models/taskModel.js';
 import { requireAuth } from '../middleware/auth.js';
 
@@ -34,7 +36,15 @@ router.post(
   body('title').isString().trim().isLength({ min: 1, max: 200 }),
   body('status').optional().isIn(['todo', 'in_progress', 'done']),
   body('priority').optional().isIn(['low', 'medium', 'high']),
-  body('due_at').optional().isISO8601(),
+  body('due_at').optional().isISO8601(),              // store ISO date (frontend can send 'YYYY-MM-DD')
+  body('recur').optional({ nullable: true }).isIn(['daily', 'weekly', 'monthly']),
+  body('recur_until').optional().isISO8601(),
+  (req, res, next) => {
+      if (req.body?.recur && !req.body?.due_at) {
+          return res.status(400).json({ message: 'due_at is required when recur is set' });
+      }
+      next();
+  },
   (req, res) => {
     const v = check(req, res);
     if (v) return v;
@@ -53,29 +63,33 @@ router.post(
   }
 );
 
-// GET /api/tasks (list with filters).
+// GET /api/tasks (filters) + /api/tasks?on=YYYY-MM-DD (due-on-day)
 router.get(
-  '/',
-  query('limit').optional().isInt({ min: 1, max: 100 }).toInt(),
-  query('offset').optional().isInt({ min: 0 }).toInt(),
-  query('status').optional().isIn(['todo', 'in_progress', 'done']),
-  query('priority').optional().isIn(['low', 'medium', 'high']),
-  query('q').optional().isString().trim().isLength({ min: 1, max: 200 }),
-  (req, res) => {
-    const v = check(req, res);
-    if (v) return v;
+    '/',
+    query('limit').optional().isInt({ min: 1, max: 100 }).toInt(),
+    query('offset').optional().isInt({ min: 0 }).toInt(),
+    query('status').optional().isIn(['todo', 'in_progress', 'done']),
+    query('priority').optional().isIn(['low', 'medium', 'high']),
+    query('q').optional().isString().trim().isLength({ min: 1, max: 200 }),
+    query('on').optional().isISO8601(),
+    (req, res) => {
+        const v = check(req, res);
+        if (v) return v;
 
-    // Filters.
-    const { limit = 20, offset = 0, status, priority, q } = req.query;
-    const data = listTasks({ limit, offset, status, priority, q, userId: req.user.id });
+        const { limit = 20, offset = 0, status, priority, q, on } = req.query;
 
-    // Normalize shape of array.
-    const normalized = Array.isArray(data)
-      ? { total: data.length, limit, offset, items: data }
-      : data;
+        if (on) {
+            const data = listTasksOnDate(req.user.id, on, { limit, offset });
+            return res.json(data);
+        }
 
-    res.json(normalized);
-  }
+        const data = listTasks({ limit, offset, status, priority, q, userId: req.user.id });
+        const normalized = Array.isArray(data)
+            ? { total: data.length, limit, offset, items: data }
+            : data;
+
+        res.json(normalized);
+    }
 );
 
 // GET /api/tasks/:id (read single).
@@ -99,6 +113,15 @@ router.patch(
   body('title').optional().isString().trim().isLength({ min: 1, max: 200 }),
   body('status').optional().isIn(['todo', 'in_progress', 'done']),
   body('priority').optional().isIn(['low', 'medium', 'high']),
+  body('due_at').optional().isISO8601(),              // store ISO date (frontend can send 'YYYY-MM-DD')
+  body('recur').optional({ nullable: true }).isIn(['daily', 'weekly', 'monthly']),
+  body('recur_until').optional().isISO8601(),
+  (req, res, next) => {
+        if (req.body?.recur && !req.body?.due_at) {
+            return res.status(400).json({ message: 'due_at is required when recur is set' });
+        }
+        next();
+  },
   (req, res) => {
     const v = check(req, res);
     if (v) return v;
@@ -121,6 +144,21 @@ router.delete(
     if (!ok) return res.status(404).json({ message: 'Not found' });
     res.status(204).send();
   }
+);
+
+// DELETE /api/tasks/:id/series  -> deletes the entire series of that task (optionally only future)
+router.delete(
+    '/:id/series',
+    param('id').isString().isLength({ min: 8, max: 128 }),
+    query('futureOnly').optional().isBoolean().toBoolean(),
+    (req, res) => {
+        const v = check(req, res);
+        if (v) return v;
+
+        const deleted = deleteSeriesByTaskId(req.params.id, req.user.id, { onlyFuture: !!req.query.futureOnly });
+        if (!deleted) return res.status(404).json({ message: 'Not found or not a series' });
+        res.status(200).json({ deleted });
+    }
 );
 
 export default router;
