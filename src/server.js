@@ -14,7 +14,7 @@ import cookieParser from 'cookie-parser';   // Parses Cookie header into req.coo
 
 import tasksRouter from './routes/tasks.js'; // /api/tasks endpoints
 import authRouter from './routes/auth.js';  // /api/auth endpoints
-import { requireAuth, attachUserIfPresent } from './middleware/auth.js';
+import { requireAuth } from './middleware/auth.js';
 
 // ESM-safe __dirname.
 const __filename = fileURLToPath(import.meta.url);
