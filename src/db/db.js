@@ -11,7 +11,7 @@ import Database from 'better-sqlite3';
 import fs from 'fs'
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { createUser, findUserByEmail } from '../models/userModel.js';
+import { createUser } from '../models/userModel.js';
 
 // Finds where this file is located in directory.
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -63,15 +63,15 @@ if (process.argv.includes('--user')) {
 
     (async () => {
         try {
-            const exists = await findUserByEmail(email);
-            if (exists) {
-                console.log(`User already exists: ${email}`);
-                process.exit(0);
-            }
             const user = await createUser({ email, password, firstName, lastName });
             console.log('Created user:', { id: user.id, email: user.email });
             process.exit(0);
         } catch (e) {
+            const msg = String(e?.message || '');
+            if (msg.includes('UNIQUE') || msg.includes('already in use')) {
+                console.log(`User already exists: ${email}`);
+                process.exit(0);
+            }
             console.error('Failed to seed user:', e);
             process.exit(1);
         }
