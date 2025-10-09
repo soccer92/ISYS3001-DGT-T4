@@ -13,8 +13,9 @@
       <div class="hamburger">
         <a href="create-task.html">Create a Task</a>
         <a href="view-task.html">View Tasks</a>
-        <a href="">Log out</a>
+        <a href="#" id="logoutLink">Log out</a>
       </div>
+
       <a href="javascript:void(0);" onclick="hamburgerNavToggle()">
         <img src="images/Hamburger.svg" alt="Hamburger Menu Icon">
       </a>
@@ -26,7 +27,7 @@
     <main>
       <!-- Add New "Quick" Task -->
       <section>
-        <form id="task-form">
+        <form id="task-form" autocomplete="off">
           <input type="text" id="task-input" placeholder="Add a new task here" required>
           <button type="submit" id="quick-add-btn" title="Click here to add your task to the system.">+</button>
         </form>
@@ -55,6 +56,6 @@
         }
       }
     </script>
-    <script src="app.js"></script>
+    <script src="app.js" defer></script>
   </body>
 </html>

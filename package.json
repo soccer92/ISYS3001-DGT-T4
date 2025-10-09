@@ -21,9 +21,10 @@
     "start": "node src/server.js",
     "db:init": "node src/db/db.js --init",
     "db:seed": "node src/db/db.js --seed",
+    "db:seed:user": "node src/db/db.js --user",
     "db:migrate:users": "node src/db/migrate-users.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "db:migrate:recur":  "node src/db/migrate-recurring.js" 
+    "db:migrate:recur": "node src/db/migrate-recurring.js"
   },
   "dependencies": {
     "better-sqlite3": "^9.4.0",

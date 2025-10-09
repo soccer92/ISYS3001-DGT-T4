@@ -10,7 +10,8 @@ import 'dotenv/config'; // Loads enviroment variables from .env file
 import Database from 'better-sqlite3'; 
 import fs from 'fs'
 import path from 'path';
-import {fileURLToPath} from 'url';
+import { fileURLToPath } from 'url';
+import { createUser, findUserByEmail } from '../models/userModel.js';
 
 // Finds where this file is located in directory.
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -50,4 +51,29 @@ if (process.argv.includes('--seed')) {
   const seedSql = fs.readFileSync(seedPath, 'utf8');
   db.exec(seedSql);
   console.log('DB seeded with sample data.');
+}
+
+if (process.argv.includes('--user')) {
+    const uidx = process.argv.indexOf('--user'); 
+    const email = process.argv[uidx + 1] || 'test@gmail.com';
+    const password = process.argv[uidx + 2] || 'Password123!';
+
+    const firstName = 'Test';
+    const lastName = 'User';
+
+    (async () => {
+        try {
+            const exists = await findUserByEmail(email);
+            if (exists) {
+                console.log(`User already exists: ${email}`);
+                process.exit(0);
+            }
+            const user = await createUser({ email, password, firstName, lastName });
+            console.log('Created user:', { id: user.id, email: user.email });
+            process.exit(0);
+        } catch (e) {
+            console.error('Failed to seed user:', e);
+            process.exit(1);
+        }
+    })();
 }

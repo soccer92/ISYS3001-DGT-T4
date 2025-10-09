@@ -8,12 +8,13 @@ ISYS3001 - Managing Software Development A3
 // Import the modules.
 import 'dotenv/config'; //imports configs 
 import express from 'express'; // for a webserver (express)
-import {fileURLToPath} from 'url';
+import { fileURLToPath } from 'url';
 import path from 'path'; // handle file paths
+import cookieParser from 'cookie-parser';   // Parses Cookie header into req.cookies
 
 import tasksRouter from './routes/tasks.js'; // /api/tasks endpoints
-import cookieParser from 'cookie-parser';   // Parses Cookie header into req.cookies
 import authRouter from './routes/auth.js';  // /api/auth endpoints
+import { requireAuth, attachUserIfPresent } from './middleware/auth.js';
 
 // ESM-safe __dirname.
 const __filename = fileURLToPath(import.meta.url);
@@ -35,7 +36,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, '../public')));
 
 // API routes.
-app.use('/api/tasks', tasksRouter);
+app.use('/api/tasks', requireAuth, tasksRouter);
 app.use('/api/auth', authRouter);
 
 // Start server.

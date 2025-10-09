@@ -1,16 +1,46 @@
 // Calls local API endpoints under /api/tasks.
 // Renders a list with "done" and "delete" actions.
 
+// Auth Helper
+async function me() {
+    const res = await fetch('/api/auth/me');
+    if (!res.ok) return null;
+    return res.json();
+}
+
+// fetch wrapper that bounces to login on 401
+async function apiFetch(url, options = {}) {
+    const res = await fetch(url, options);
+    if (res.status === 401) {
+        window.location.href = '/login.html';
+        throw new Error('Unauthorised');
+    }
+    return res;
+}
+
+async function logout() {
+    await fetch('/api/auth/logout', { method: 'POST' }).catch(() => { });
+    window.location.href = '/login.html';
+}
+
+// Added if later wanted to show user who is logged in
+function setUserHeader(user) {
+    const el = document.getElementById('userBox');
+    if (!el) return;
+    const label = user.firstName ? `${user.firstName} ${user.lastName || ''} · ${user.email}` : user.email;
+    el.textContent = label.trim();
+}
+
 // GET /api/tasks (List Tasks on Homepage).
 async function fetchTasks() {
-  const res = await fetch('/api/tasks');
+  const res = await apiFetch('/api/tasks');
   const data = await res.json(); // API returns (total, limit, offset, items).
   return data.items || [];
 }
 
 // Helper to set any status
 async function updateStatus(id, status) {
-  const res = await fetch(`/api/tasks/${id}`, {
+  const res = await apiFetch(`/api/tasks/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ status })
@@ -21,7 +51,7 @@ async function updateStatus(id, status) {
 
 // POST /api/tasks (Create Task).
 async function addTask(title) {
-  const res = await fetch('/api/tasks', {
+  const res = await apiFetch('/api/tasks', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ title, status: 'todo' })
@@ -42,7 +72,7 @@ async function markDone(id) {
 
 // DELETE /api/tasks/:id (Remove Task).
 async function deleteTask(id) {
-  const res = await fetch(`/api/tasks/${id}`, { method: 'DELETE' });
+  const res = await apiFetch(`/api/tasks/${id}`, { method: 'DELETE' });
   if (!res.ok && res.status !== 204) throw new Error(`Delete failed (${res.status})`);
 }
 
@@ -102,9 +132,9 @@ function render(tasks) {
     .join('');
 }
 
-// GET /api/tasks:id (fetch a single task by ID
+// GET /api/tasks/:id (fetch a single task by ID)
 async function fetchTaskById(id) {
-  const res = await fetch(`/api/tasks/${id}`);
+  const res = await apiFetch(`/api/tasks/${id}`);
   if (!res.ok) throw new Error(`Failed to fetch task (${res.status})`);
   return res.json();
 }
@@ -113,11 +143,11 @@ async function fetchTaskById(id) {
 async function refresh() {
   const tasks = await fetchTasks();
   render(tasks);
-  updateCompletionStatus();
+  updateCompletionStatus(tasks);
 }
 
 // Update the completion status in the footer 
-async function updateCompletionStatus() {
+function updateCompletionStatus(tasks) {
   try {
     const tasks = await fetchTasks(); // fetch all tasks from API
     const completed = tasks.filter(t => t.status === 'done').length; // count completed tasks
@@ -132,7 +162,23 @@ async function updateCompletionStatus() {
 }
 
 // Hook up DOM events on load.
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
+    // Auth Gate
+    const user = await me();
+    if (!user) {
+        window.location.href = '/login.html';
+        return;
+    }
+    setUserHeader(user); // For future use
+
+    const logoutLink = document.getElementById('logoutLink');
+    if (logoutLink) {
+        logoutLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            logout();
+        });
+    }
+
   const form = document.getElementById('task-form');
   const input = document.getElementById('task-input');
   const list = document.getElementById('task-list');
@@ -168,12 +214,14 @@ window.addEventListener('DOMContentLoaded', () => {
         // Fetch the task details from the API
         const task = await fetchTaskById(id);
 
+        const due = task.due_at || '';
+
         // Populate the task editing form with API values
         document.getElementById('edit-task-id').value = task.id;
         document.getElementById('edit-task-title').value = task.title || '';
         document.getElementById('edit-task-desc').value = task.description || '';
         document.getElementById('edit-task-priority').value = task.priority || 'medium';
-        document.getElementById('edit-date').value = task.dueDate || '';
+        document.getElementById('edit-date').value = due ? String(due).slice(0, 10) : '';
         document.getElementById('edit-task-status').value = task.status || 'todo';
 
         document.getElementById('edit-form').style.display = 'block';

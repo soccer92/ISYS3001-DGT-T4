@@ -4,6 +4,8 @@ import { getDb } from '../db/db.js';
 import { randomUUID, randomBytes, scryptSync, timingSafeEqual } from 'crypto';
 
 const db = getDb();
+const exists = await findUserByEmail(db, email);
+const user = await createUser(db, { email, password, firstName, lastName });
 
 function hashPassword(password, saltHex) {
     const salt = Buffer.from(saltHex, 'hex');
