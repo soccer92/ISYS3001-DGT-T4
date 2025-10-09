@@ -42,6 +42,29 @@
             <label for="due-date">Due Date:</label>
             <input type="date" id="due-date" name="due-date" required>
           </div>
+          <!-- Task Priority -->
+          <div class="input-wrapper">
+            <label for="task-priority">Priority:</label>
+            <select id="task-priority" name="task-priority">
+              <option value="low">Low Priority</option>
+              <option value="medium">Medium Priority</option>
+              <option value="high">High Priority</option>
+            </select>
+          </div>
+          <!-- Reccurance -->
+          <div class="input-wrapper">
+            <label for="recurr">Repeat:</label>
+            <select id="recurr" name="recurr">
+              <option value="none">None</option>
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+            </select>
+          </div>
+          <div class="input-wrapper">
+            <label for="recurr-until">Repeat until:</label>
+            <input type="date" id="recurr-until" name="recurr-until">
+          </div>
           <!-- Submit Form -->
           <input type="submit" value="Create Task">
         </form>

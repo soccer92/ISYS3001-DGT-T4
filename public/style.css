@@ -178,7 +178,7 @@ section form label, section .task-create .input-wrapper label, #edit-form label 
     width: 200px;
 }
 
-section form input, section form textarea, #edit-form input, #edit-form textarea, #edit-form select {
+section form input, section form textarea, section form select, #edit-form input, #edit-form textarea, #edit-form select {
     flex: 1;
     padding: 8px;
     margin-right: 8px;
