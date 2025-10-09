@@ -11,7 +11,6 @@ import Database from 'better-sqlite3';
 import fs from 'fs'
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { createUser } from '../models/userModel.js';
 
 // Finds where this file is located in directory.
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -63,6 +62,8 @@ if (process.argv.includes('--user')) {
 
     (async () => {
         try {
+            const { createUser } = await import('../models/userModel.js');
+
             const user = await createUser({ email, password, firstName, lastName });
             console.log('Created user:', { id: user.id, email: user.email });
             process.exit(0);
