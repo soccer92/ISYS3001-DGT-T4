@@ -25,19 +25,16 @@
     </nav>
 
     <h1>View Tasks</h1>
-
     <!-- Main Content -->
     <main>
         <!-- Display Task List -->
         <section>
             <ul id="task-list"></ul>
         </section>
-        <!-- Edit Tasks -->
-        <h2>Edit Task</h2>
-        <p>Select a task above to edit</p>
+        <!-- Edit Tasks -->   
         <section>
-            
             <form id="edit-form" style="display: none;">
+                <h2>Edit Task</h2>
                 <input type="hidden" id="edit-task-id">
                 <!-- Task Title -->
                 <div class="input-wrapper">
@@ -63,6 +60,20 @@
                     <label for="edit-date">Due Date:</label>
                     <input type="date" id="edit-date" name="edit-date">
                 </div>
+                <!-- Task Recurrence -->
+                <div class="input-wrapper">
+                    <label for="edit-task-recurr">Recurrence:</label>
+                    <select id="edit-task-recurr">
+                        <option value="none">None</option>
+                        <option value="daily">Daily</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly">Monthly</option>
+                    </select>
+                </div>
+                <div class="input-wrapper">
+                    <label for="edit-task-recurr-until">Repeat until:</label>
+                    <input type="date" id="edit-task-recurr-until" name="edit-task-recurr-until">
+                </div>
                 <!-- Task Completion Status -->
                 <div class="input-wrapper">
                     <label for="edit-task-status">Status:</label>
@@ -75,7 +86,7 @@
                 <!-- Submit Form -->
                 <button type="submit">Save Changes</button>
                 <button type="button" id="cancel-edit">Cancel</button>
-
+                <button type="button" onclick="deleteTask(document.getElementById('edit-task-id').value)">Delete</button>
             </form>
         </section>
 
@@ -102,50 +113,163 @@
     <script src="app.js"></script>
 
     <script>
-        const editForm = document.getElementById('edit-form');
 
-        const editTaskId = document.getElementById('edit-task-id');
-        const editTaskTitle = document.getElementById('edit-task-title');
-        const editTaskDesc = document.getElementById('edit-task-desc');
-        const editTaskPriority = document.getElementById('edit-task-priority');
-        const editDate = document.getElementById('edit-date');
-        const editTaskStatus = document.getElementById('edit-task-status');
+        // Render the current task list for edit page to <ul>.
+        function render(tasks) {
 
-        const cancelEdit = document.getElementById('cancel-edit');
+            const ul = document.getElementById('task-list');
+            if (!ul) return; // skips rendering on pages without a task list (for updateCompletionStatus() to work).
 
-        // edit-task-title, edit-task-desc, edit-task-priority, edit-date, edit-task-status
+            // Map values to display labels
+            const priorityLabels = {
+                high: "High Priority",
+                medium: "Medium Priority",
+                low: "Low Priority"
+            };
 
-        // reuse refresh() from app.js
-        refresh();
+            const statusLabels = {
+                todo: "To Do",
+                in_progress: "In Progress",
+                done: "Completed"
+            };
 
-        // show form when edit button is clicked
-        editForm.addEventListener('submit', async (e) => {
+            ul.innerHTML = (tasks || [])
+                .map(t => {
 
-            e.preventDefault(); // stops page from reloading
+                const pr = priorityLabels[t.priority] || t.priority;
+                const st = statusLabels[t.status] || t.status;
 
-            try {
-                await fetch(`/api/tasks/${editTaskId.value}`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        title: editTaskTitle.value,
-                        description: editTaskDesc.value,
-                        priority: editTaskPriority.value,
-                        dueDate: editDate.value,
-                        status: editTaskStatus.value
-                        // edit-task-title, edit-task-desc, edit-task-priority, edit-date, edit-task-status
-                    })
-                });
+                const dd = t.due_at
+                ? new Date(t.due_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })
+                : '';
+
+                return `        
+                <li data-id="${t.id}" data-priority="${t.priority}"> 
+                    <strong>${escapeHtml(t.title)}</strong>
+                    <em>${escapeHtml(st)}</em>
+                    ${t.due_at ? `<p><b>Due:</b> ${dd}</p>` : ''}
+                    ${t.recur ? `<p class="recur-info">Repeats ${t.recur} until ${t.recur_until ? new Date(t.recur_until).toLocaleDateString('en-AU') : '—'}</p>` : ''}
+                    <div class="task-actions">
+                        <button type="button" class="edit">Edit</button>
+                    </div>
+                </li>`;
+
+                })
+                .join('');
+        }
+
+        // Refresh + render specifically for edit page
+        async function refreshEdit() {
+            const tasks = await fetchTasks();
+            render(tasks);
+            updateCompletionStatus();
+        }
+
+        // Edit page logic
+        document.addEventListener('DOMContentLoaded', () => {
+
+            const editForm = document.getElementById('edit-form');
+
+            const editTaskId = document.getElementById('edit-task-id');
+            const editTaskTitle = document.getElementById('edit-task-title');
+            const editTaskDesc = document.getElementById('edit-task-desc');
+            const editTaskPriority = document.getElementById('edit-task-priority');
+            const editDate = document.getElementById('edit-date');
+            const editTaskRecurr = document.getElementById('edit-task-recurr');
+            const editTaskRecurrUntil = document.getElementById('edit-task-recurr-until');
+            const editTaskStatus = document.getElementById('edit-task-status');
+
+            const cancelEdit = document.getElementById('cancel-edit');
+
+            // edit-task-title, edit-task-desc, edit-task-priority, edit-date, edit-task-status
+
+            // inital render
+            refreshEdit();           
+
+            // patches task when edit form is submitted (Save Changes button)
+            editForm.addEventListener('submit', async (e) => {
+
+                e.preventDefault(); // stops page from reloading
+
+                const dueValue = editDate.value ? new Date(editDate.value).toISOString() : undefined;
+                const recurValue = editTaskRecurr.value !== 'none' ? editTaskRecurr.value : undefined;
+
+
+                // if recur is set but no due date selected, warn user before sending
+                if (recurValue && !dueValue) {
+                    alert('Please set a due date when you enable recurrence.');
+                    return;
+                }
+
+                // dynamically build patch data to avoid sending undefined values
+                const patchData = {
+                    title: editTaskTitle.value,
+                    description: editTaskDesc.value,
+                    priority: editTaskPriority.value,
+                    status: editTaskStatus.value
+                };
+                if (dueValue) patchData.due_at = dueValue;
+                if (recurValue) patchData.recur = recurValue;
+                if (editTaskRecurrUntil.value)
+                    patchData.recur_until = new Date(editTaskRecurrUntil.value).toISOString();
+
+                try {
+                    const res = await fetch(`/api/tasks/${editTaskId.value}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(patchData)
+                    });
+
+                    if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    alert('Failed to update task: ' + (err.message || res.status));
+                    return;
+                    }
+
+                    alert('Task updated successfully');
+                    editForm.style.display = 'none';
+                    refreshEdit();
+
+                } catch (err) {
+                    alert('Failed to update task: ' + err.message);
+                }
+            });
+            
+            // hide form when cancel is clicked
+            cancelEdit.addEventListener('click', () => {
                 editForm.style.display = 'none';
-                refresh();
-            } catch (err) {
-                alert('Failed to update task: ' + err.message);
-            }
-        });
-        
-        // hide form when cancel is clicked
-        cancelEdit.addEventListener('click', () => {
-            editForm.style.display = 'none';
+            });
+
+            // Task deletion
+            const list = document.getElementById('task-list');
+
+            // Handle edit button click using event delegation
+            list?.addEventListener('click', async (e) => {
+                const li = e.target.closest('li');
+                if (!li) return;
+
+                const id = li.getAttribute('data-id');
+                
+                // Handle delete button click
+                if (e.target.classList.contains('del')) {
+
+                    const confirmDelete = confirm("Are you sure you want to delete this task? This action cannot be undone.");
+                    if (!confirmDelete) return;
+
+                    try {
+                        const res = await fetch(`/api/tasks/${id}`, { method: 'DELETE' });
+                        if (!res.ok && res.status !== 204) {
+                        throw new Error(`Delete failed (${res.status})`);
+                        }
+
+                        alert('Task deleted successfully!');
+                        refreshEdit(); // re-render task list
+                    } catch (err) {
+                        console.error(err);
+                        alert('Failed to delete task: ' + err.message);
+                    }
+                    }
+            }); 
         });
 
     </script>

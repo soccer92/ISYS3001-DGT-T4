@@ -16,6 +16,9 @@ import tasksRouter from './routes/tasks.js'; // /api/tasks endpoints
 import authRouter from './routes/auth.js';  // /api/auth endpoints
 import { requireAuth } from './middleware/auth.js';
 
+import cron from 'node-cron'; // for scheduling daily email
+import { sendDailySummary } from './emailService.js'; // email service
+
 // ESM-safe __dirname.
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -42,4 +45,10 @@ app.use('/api/auth', authRouter);
 // Start server.
 app.listen(PORT, HOST, () => {
   console.log(`Local app running at http://${HOST}:${PORT}`);
+});
+
+// Sends daily task summary each day at 9am
+cron.schedule('0 9 * * *', () => {
+  console.log('Sending daily TaskFlow summary emails...');
+  sendDailySummary();
 });

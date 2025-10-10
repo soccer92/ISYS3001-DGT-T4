@@ -78,7 +78,7 @@ export function createTask(body) {
   return row;
 }
 
-// LIST tasks with basic filtering.
+// LIST tasks with basic filtering (includes recurring instances)
 export function listTasks({ limit = 20, offset = 0, status, priority, q, userId } = {}) {
   // Collect WHERE clauses & named params.
   const where = [];
@@ -104,10 +104,11 @@ export function listTasks({ limit = 20, offset = 0, status, priority, q, userId 
 
   const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
 
-  // Fetch a page of items (sorted newest first by created_at).
+  // Fetch a page of items (sorted by due date first, then creation time) - includes all tasks.
   const items = db.prepare(`
     SELECT * FROM tasks ${whereSql} 
-    ORDER BY created_at DESC 
+    ORDER BY CASE WHEN due_at IS NULL THEN 1 ELSE 0 END,  -- non-dated tasks last
+    due_at ASC, created_at ASC
     LIMIT @limit OFFSET @offset
   `).all({ ...params, limit, offset });
 

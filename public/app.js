@@ -27,7 +27,7 @@ async function logout() {
 function setUserHeader(user) {
     const el = document.getElementById('userBox');
     if (!el) return;
-    const label = user.firstName ? `${user.firstName} ${user.lastName || ''} · ${user.email}` : user.email;
+    const label = user.firstName ? `${user.firstName} ${user.lastName || ''} ï¿½ ${user.email}` : user.email;
     el.textContent = label.trim();
 }
 
@@ -72,6 +72,23 @@ async function markDone(id) {
 
 // DELETE /api/tasks/:id (Remove Task).
 async function deleteTask(id) {
+
+  const confirmDelete = confirm("Are you sure you want to delete this task? This action cannot be undone.");
+  if (!confirmDelete) return;
+
+  try {
+    const res = await fetch(`/api/tasks/${id}`, { method: 'DELETE' });
+    if (!res.ok && res.status !== 204) throw new Error(`Delete failed (${res.status})`);
+    alert('Task deleted successfully!');
+
+    document.getElementById('edit-form').style.display = 'none';
+    if (typeof refreshEdit === 'function') refreshEdit(); // refresh if available
+    else if (typeof refresh === 'function') refresh();    // fallback for homepage
+
+  } catch (err) {
+    console.error(err);
+    alert('Failed to delete task: ' + err.message);
+  }
   const res = await apiFetch(`/api/tasks/${id}`, { method: 'DELETE' });
   if (!res.ok && res.status !== 204) throw new Error(`Delete failed (${res.status})`);
 }
@@ -117,15 +134,21 @@ function render(tasks) {
       const pr = priorityLabels[t.priority] || t.priority;
       const st = statusLabels[t.status] || t.status;
 
+      const dd = t.due_at
+        ? new Date(t.due_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })
+        : '';
+
       return `        
       <li data-id="${t.id}" data-priority="${t.priority}">
         <strong>${escapeHtml(pr)}</strong> 
         ${escapeHtml(t.title)}
         <em>${escapeHtml(st)}</em>
+        ${t.due_at ? `<p><b>Due:</b> ${dd}</p>` : ''}
+        ${t.recur ? `<p class="recur-info">Repeats ${t.recur} until ${t.recur_until ? new Date(t.recur_until).toLocaleDateString('en-AU') : 'â€”'}</p>` : ''}
         <div class="task-actions">
           ${progressBtn}
           ${isViewPage ? `<button type="button" class="edit">Edit</button>` : ''}
-          <button type="button" class="del">Delete</button>
+          ${isViewPage ? `<button type="button" class="del">Delete</button>` : ''}
         </div>
       </li>`;
     })
@@ -192,8 +215,12 @@ window.addEventListener('DOMContentLoaded', async () => {
     refresh();
   });
 
+  let currentFormParent = null;
+
   // Delegate clicks for done/delete buttons.
   list?.addEventListener('click', async (e) => {
+
+
     const li = e.target.closest('li');
     if (!li) return;
     const id = li.getAttribute('data-id');
@@ -211,6 +238,13 @@ window.addEventListener('DOMContentLoaded', async () => {
         await refresh();
       } else if (e.target.classList.contains('edit')) {
 
+        const editForm = document.getElementById('edit-form');
+
+        if (!editForm) {
+          console.warn('No edit form on this page.');
+          return; // do nothing on pages without the edit form
+        }
+
         // Fetch the task details from the API
         const task = await fetchTaskById(id);
 
@@ -221,17 +255,83 @@ window.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('edit-task-title').value = task.title || '';
         document.getElementById('edit-task-desc').value = task.description || '';
         document.getElementById('edit-task-priority').value = task.priority || 'medium';
+        document.getElementById('edit-date').value = task.due_at || '';
+        document.getElementById('edit-task-recurr').value = task.recur || 'none';
+        document.getElementById('edit-task-recurr-until').value = task.recur_until || '';
         document.getElementById('edit-date').value = due ? String(due).slice(0, 10) : '';
         document.getElementById('edit-task-status').value = task.status || 'todo';
 
-        document.getElementById('edit-form').style.display = 'block';
+        // Move form below the selected task
+        if (currentFormParent && currentFormParent !== li) {
+          currentFormParent.classList.remove('editing');
+        }
+        currentFormParent = li;
+        li.after(editForm);
+        editForm.style.display = 'block';
+        li.classList.add('editing');
+
+        editForm.scrollIntoView({ behavior: 'smooth', block: 'center' }); // smooth scroll to form
 
       }
+      // await refresh();
     } catch (err) {
       console.error(err);
       alert('Action failed: ' + (err?.message || 'See console'));
     }
   });
 
+  // handle the Create Task form (create-task.html)
+  const createForm = document.querySelector('.task-create');
+
+  if (createForm) {
+    createForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const title = document.querySelector('#task-title').value.trim();
+      const description = document.querySelector('#task-description').value.trim();
+      const dueDate = document.querySelector('#due-date').value;
+      const priority = document.querySelector('#task-priority').value;
+      const recurr = document.querySelector('#recurr').value !== 'none' ? document.querySelector('#recurr').value : null;
+      const recurrUntil = document.querySelector('#recurr-until').value || null;
+
+      const dueISO = dueDate ? new Date(dueDate).toISOString() : null; // normalise to ISO or null
+
+      if (!title || !description || !dueDate) {
+        alert('Please fill in all required fields.');
+        return;
+      }
+
+      const newTask = {
+        title,
+        description,
+        due_at: dueISO,
+        priority,
+        recur: recurr !== 'none' ? recurr : null,
+        recur_until: recurrUntil ? new Date(recurrUntil).toISOString() : null
+      };
+
+      try {
+        const res = await fetch('/api/tasks', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newTask)
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          alert('Failed to create task: ' + (err?.message || res.status));
+          return;
+        }
+
+        alert('Task created successfully!');
+        createForm.reset();
+        window.location.href = '/'; // Redirect to homepage after creation
+      } catch (err) {
+        console.error('Error creating task:', err);
+        alert('Error connecting to server. Please try again later.');
+      }
+    });
+  }
+  // initial refresh on page load
   refresh();
 });
