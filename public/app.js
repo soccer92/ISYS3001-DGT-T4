@@ -42,7 +42,7 @@ async function markDone(id) {
 
 // DELETE /api/tasks/:id (Remove Task).
 async function deleteTask(id) {
-  
+
   const confirmDelete = confirm("Are you sure you want to delete this task? This action cannot be undone.");
   if (!confirmDelete) return;
 
@@ -54,7 +54,7 @@ async function deleteTask(id) {
     document.getElementById('edit-form').style.display = 'none';
     if (typeof refreshEdit === 'function') refreshEdit(); // refresh if available
     else if (typeof refresh === 'function') refresh();    // fallback for homepage
-    
+
   } catch (err) {
     console.error(err);
     alert('Failed to delete task: ' + err.message);
@@ -103,8 +103,8 @@ function render(tasks) {
       const st = statusLabels[t.status] || t.status;
 
       const dd = t.due_at
-      ? new Date(t.due_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })
-      : '';
+        ? new Date(t.due_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })
+        : '';
 
       return `        
       <li data-id="${t.id}" data-priority="${t.priority}">
@@ -169,8 +169,12 @@ window.addEventListener('DOMContentLoaded', () => {
     refresh();
   });
 
+  let currentFormParent = null;
+
   // Delegate clicks for done/delete buttons.
   list?.addEventListener('click', async (e) => {
+
+
     const li = e.target.closest('li');
     if (!li) return;
     const id = li.getAttribute('data-id');
@@ -188,6 +192,13 @@ window.addEventListener('DOMContentLoaded', () => {
         await refresh();
       } else if (e.target.classList.contains('edit')) {
 
+        const editForm = document.getElementById('edit-form');
+
+        if (!editForm) {
+          console.warn('No edit form on this page.');
+          return; // do nothing on pages without the edit form
+        }
+
         // Fetch the task details from the API
         const task = await fetchTaskById(id);
 
@@ -201,14 +212,23 @@ window.addEventListener('DOMContentLoaded', () => {
         document.getElementById('edit-task-recurr-until').value = task.recur_until || '';
         document.getElementById('edit-task-status').value = task.status || 'todo';
 
-        document.getElementById('edit-form').style.display = 'block';
+        // Move form below the selected task
+        if (currentFormParent && currentFormParent !== li) {
+          currentFormParent.classList.remove('editing');
+        }
+        currentFormParent = li;
+        li.after(editForm);
+        editForm.style.display = 'block';
+        li.classList.add('editing');
+
+        editForm.scrollIntoView({ behavior: 'smooth', block: 'center' }); // smooth scroll to form
 
       }
-      await refresh();
+      // await refresh();
     } catch (err) {
-        console.error(err);
-        alert('Action failed: ' + (err?.message || 'See console'));
-      }
+      console.error(err);
+      alert('Action failed: ' + (err?.message || 'See console'));
+    }
   });
 
   // handle the Create Task form (create-task.html)
@@ -225,12 +245,21 @@ window.addEventListener('DOMContentLoaded', () => {
       const recurr = document.querySelector('#recurr').value !== 'none' ? document.querySelector('#recurr').value : null;
       const recurrUntil = document.querySelector('#recurr-until').value || null;
 
+      const dueISO = dueDate ? new Date(dueDate).toISOString() : null; // normalise to ISO or null
+
       if (!title || !description || !dueDate) {
         alert('Please fill in all required fields.');
         return;
       }
 
-      const newTask = {title, description, dueDate, priority, recurr, recurrUntil};
+      const newTask = {
+        title,
+        description,
+        due_at: dueISO,
+        priority,
+        recur: recurr !== 'none' ? recurr : null,
+        recur_until: recurrUntil ? new Date(recurrUntil).toISOString() : null
+      };
 
       try {
         const res = await fetch('/api/tasks', {
@@ -248,7 +277,7 @@ window.addEventListener('DOMContentLoaded', () => {
         alert('Task created successfully!');
         createForm.reset();
         window.location.href = '/'; // Redirect to homepage after creation
-    } catch (err) {
+      } catch (err) {
         console.error('Error creating task:', err);
         alert('Error connecting to server. Please try again later.');
       }

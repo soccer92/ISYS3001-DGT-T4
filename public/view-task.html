@@ -25,19 +25,16 @@
     </nav>
 
     <h1>View Tasks</h1>
-
     <!-- Main Content -->
     <main>
         <!-- Display Task List -->
         <section>
             <ul id="task-list"></ul>
         </section>
-        <!-- Edit Tasks -->
-        <h2>Edit Task</h2>
-        <p>Select a task above to edit</p>
+        <!-- Edit Tasks -->   
         <section>
-            
             <form id="edit-form" style="display: none;">
+                <h2>Edit Task</h2>
                 <input type="hidden" id="edit-task-id">
                 <!-- Task Title -->
                 <div class="input-wrapper">
@@ -146,18 +143,6 @@
                 ? new Date(t.due_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })
                 : '';
 
-                // return `        
-                // <li data-id="${t.id}" data-priority="${t.priority}"> 
-                //     <strong>${escapeHtml(pr)}</strong>
-                //     ${escapeHtml(t.title)}
-                //     <em>${escapeHtml(st)}</em>
-                //     ${t.due_at ? `<p><b>Due:</b> ${dd}</p>` : ''}
-                //     ${t.recur ? `<p class="recur-info">Repeats ${t.recur} until ${t.recur_until ? new Date(t.recur_until).toLocaleDateString('en-AU') : '—'}</p>` : ''}
-                //     <div class="task-actions">
-                //         <button type="button" class="edit">Edit</button>
-                //     </div>
-                // </li>`;
-
                 return `        
                 <li data-id="${t.id}" data-priority="${t.priority}"> 
                     <strong>${escapeHtml(t.title)}</strong>
@@ -258,12 +243,13 @@
             // Task deletion
             const list = document.getElementById('task-list');
 
+            // Handle edit button click using event delegation
             list?.addEventListener('click', async (e) => {
                 const li = e.target.closest('li');
                 if (!li) return;
 
                 const id = li.getAttribute('data-id');
-
+                
                 // Handle delete button click
                 if (e.target.classList.contains('del')) {
 
