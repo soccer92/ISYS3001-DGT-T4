@@ -89,8 +89,6 @@ async function deleteTask(id) {
     console.error(err);
     alert('Failed to delete task: ' + err.message);
   }
-  const res = await apiFetch(`/api/tasks/${id}`, { method: 'DELETE' });
-  if (!res.ok && res.status !== 204) throw new Error(`Delete failed (${res.status})`);
 }
 
 // Escape special HTML characters so user input is displayed safely
@@ -170,7 +168,7 @@ async function refresh() {
 }
 
 // Update the completion status in the footer 
-function updateCompletionStatus(tasks) {
+async function updateCompletionStatus(tasks) {
   try {
     const tasks = await fetchTasks(); // fetch all tasks from API
     const completed = tasks.filter(t => t.status === 'done').length; // count completed tasks
@@ -319,6 +317,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 
         if (!res.ok) {
           const err = await res.json().catch(() => ({}));
+          console.error('Validation errors:', JSON.stringify(err, null, 2));
           alert('Failed to create task: ' + (err?.message || res.status));
           return;
         }

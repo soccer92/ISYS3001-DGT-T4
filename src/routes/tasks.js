@@ -21,13 +21,13 @@ import { sendEmail } from '../emailService.js';
 
 const router = Router();
 
-// TEMP: dev-user for local dev
-router.use((req, res, next) => {
-  if (!req.user) {
-    req.user = { id: 'dev-user' };
-  }
-  next();
-});
+// // TEMP: dev-user for local dev
+// router.use((req, res, next) => {
+//   if (!req.user) {
+//     req.user = { id: 'dev-user' };
+//   }
+//   next();
+// });
 
 // Return 400 with validation message when needed.
 function check(req, res) {
@@ -36,7 +36,7 @@ function check(req, res) {
 }
 
 // requireAuth sets req.user = { id, email } if valid.
-// router.use(requireAuth);
+router.use(requireAuth);
 
 // POST /api/tasks (create).
 router.post(
@@ -46,7 +46,7 @@ router.post(
   body('priority').optional().isIn(['low', 'medium', 'high']),
   body('due_at').optional().isISO8601(),              // store ISO date (frontend can send 'YYYY-MM-DD')
   body('recur').optional({ nullable: true }).isIn(['daily', 'weekly', 'monthly']),
-  body('recur_until').optional().isISO8601(),
+  body('recur_until').optional({ nullable: true }).isISO8601(),
   (req, res, next) => {
       if (req.body?.recur && !req.body?.due_at) {
           return res.status(400).json({ message: 'due_at is required when recur is set' });
