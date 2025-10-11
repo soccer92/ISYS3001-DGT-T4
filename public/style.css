@@ -50,6 +50,17 @@ body {
     margin: 16px 0;
 }
 
+.login .login-form p {
+    color: #fff;
+    text-align: center;
+    font-size: 8pt;
+}
+
+.login .login-form p a {
+    color: #6699ff;
+    text-decoration: underline;
+}
+
 .login .login-form form {
     display: flex;
     flex-direction: column;
