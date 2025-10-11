@@ -1,14 +1,16 @@
-// Calls local API endpoints under /api/tasks.
-// Renders a list with "done" and "delete" actions.
+/*
+* Calls local API endpoints under /api/tasks.
+* Renders a list with "done" and "delete" actions.
+*/
 
-// Auth Helper
+// Auth helper.
 async function me() {
     const res = await fetch('/api/auth/me');
     if (!res.ok) return null;
     return res.json();
 }
 
-// fetch wrapper that bounces to login on 401
+// Fetch wrapper that bounces to login on 401.
 async function apiFetch(url, options = {}) {
     const res = await fetch(url, options);
     if (res.status === 401) {
@@ -23,7 +25,7 @@ async function logout() {
     window.location.href = '/login.html';
 }
 
-// Added if later wanted to show user who is logged in
+// Added if the team later wanted to show which user is logged in.
 function setUserHeader(user) {
     const el = document.getElementById('userBox');
     if (!el) return;
@@ -38,7 +40,7 @@ async function fetchTasks() {
   return data.items || [];
 }
 
-// Helper to set any status
+// Helper to set any status.
 async function updateStatus(id, status) {
   const res = await apiFetch(`/api/tasks/${id}`, {
     method: 'PATCH',
@@ -82,8 +84,8 @@ async function deleteTask(id) {
     alert('Task deleted successfully!');
 
     document.getElementById('edit-form').style.display = 'none';
-    if (typeof refreshEdit === 'function') refreshEdit(); // refresh if available
-    else if (typeof refresh === 'function') refresh();    // fallback for homepage
+    if (typeof refreshEdit === 'function') refreshEdit(); // Refresh if available.
+    else if (typeof refresh === 'function') refresh();    // Fallback for homepage.
 
   } catch (err) {
     console.error(err);
@@ -91,7 +93,7 @@ async function deleteTask(id) {
   }
 }
 
-// Escape special HTML characters so user input is displayed safely
+// Escape special HTML characters so user input is displayed safely.
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
@@ -101,12 +103,12 @@ function escapeHtml(s) {
 // Render the current list of tasks to <ul>.
 function render(tasks) {
 
-  const isViewPage = window.location.pathname.includes('view-task.html'); // includes edit btn on view task page only
+  const isViewPage = window.location.pathname.includes('view-task.html'); // Includes edit btn on view task page only.
 
   const ul = document.getElementById('task-list');
-  if (!ul) return; // skips rendering on pages without a task list (for updateCompletionStatus() to work).
+  if (!ul) return; // Skips rendering on pages without a task list (for updateCompletionStatus() to work).
 
-  // Map values to display labels
+  // Map values to display labels.
   const priorityLabels = {
     high: "High Priority",
     medium: "Medium Priority",
@@ -121,7 +123,7 @@ function render(tasks) {
 
   ul.innerHTML = (tasks || [])
     .map(t => {
-      //conditional progress button
+      // Conditional progress button
       let progressBtn = '';
       if (t.status === 'todo') {
         progressBtn = `<button type="button" class="to-in-progress">In Progress</button>`;
@@ -153,7 +155,7 @@ function render(tasks) {
     .join('');
 }
 
-// GET /api/tasks/:id (fetch a single task by ID)
+// GET /api/tasks/:id (fetch a single task by ID).
 async function fetchTaskById(id) {
   const res = await apiFetch(`/api/tasks/${id}`);
   if (!res.ok) throw new Error(`Failed to fetch task (${res.status})`);
@@ -167,12 +169,12 @@ async function refresh() {
   updateCompletionStatus(tasks);
 }
 
-// Update the completion status in the footer 
+// Update the completion status in the footer.
 async function updateCompletionStatus(tasks) {
   try {
-    const tasks = await fetchTasks(); // fetch all tasks from API
-    const completed = tasks.filter(t => t.status === 'done').length; // count completed tasks
-    const percent = tasks.length > 0 ? Math.round((completed / tasks.length) * 100) : 0; // calculates percentage
+    const tasks = await fetchTasks(); // Fetch all tasks from API.
+    const completed = tasks.filter(t => t.status === 'done').length; // Count completed tasks.
+    const percent = tasks.length > 0 ? Math.round((completed / tasks.length) * 100) : 0; // Calculates percentage.
 
     document.getElementById('completion-status').textContent = `${percent}%`;
 
@@ -184,13 +186,13 @@ async function updateCompletionStatus(tasks) {
 
 // Hook up DOM events on load.
 window.addEventListener('DOMContentLoaded', async () => {
-    // Auth Gate
+    // Auth gate.
     const user = await me();
     if (!user) {
         window.location.href = '/login.html';
         return;
     }
-    setUserHeader(user); // For future use
+    setUserHeader(user); // For future use.
 
     const logoutLink = document.getElementById('logoutLink');
     if (logoutLink) {
@@ -199,6 +201,25 @@ window.addEventListener('DOMContentLoaded', async () => {
             logout();
         });
     }
+
+    // Export tasks as PDF/CSV functionality.
+    const exportTasksCSV = document.getElementById('exportCSV');
+    const exportTasksPDF = document.getElementById('exportPDF');
+
+    if (exportTasksCSV) {
+        console.log('Export CSV initialised');
+        exportTasksCSV.addEventListener('click', async (e) => {
+            e.preventDefault();
+            window.open('/api/tasks/export/csv', '_blank');
+        });
+    }
+    
+    if (exportTasksPDF) {
+      exportTasksPDF.addEventListener('click', async (e) => {
+          e.preventDefault();
+          window.open('/api/tasks/export/pdf', '_blank');
+      });
+  }
 
   const form = document.getElementById('task-form');
   const input = document.getElementById('task-input');
@@ -223,7 +244,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     if (!li) return;
     const id = li.getAttribute('data-id');
 
-    // Handle progression states
+    // Handle progression states.
     try {
       if (e.target.classList.contains('to-in-progress')) {
         await updateStatus(id, 'in_progress');
@@ -240,15 +261,15 @@ window.addEventListener('DOMContentLoaded', async () => {
 
         if (!editForm) {
           console.warn('No edit form on this page.');
-          return; // do nothing on pages without the edit form
+          return; // Do nothing on pages without the edit form.
         }
 
-        // Fetch the task details from the API
+        // Fetch the task details from the API.
         const task = await fetchTaskById(id);
 
         const due = task.due_at || '';
 
-        // Populate the task editing form with API values
+        // Populate the task editing form with API values.
         document.getElementById('edit-task-id').value = task.id;
         document.getElementById('edit-task-title').value = task.title || '';
         document.getElementById('edit-task-desc').value = task.description || '';
@@ -259,7 +280,7 @@ window.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('edit-date').value = due ? String(due).slice(0, 10) : '';
         document.getElementById('edit-task-status').value = task.status || 'todo';
 
-        // Move form below the selected task
+        // Move form below the selected task.
         if (currentFormParent && currentFormParent !== li) {
           currentFormParent.classList.remove('editing');
         }
@@ -268,17 +289,17 @@ window.addEventListener('DOMContentLoaded', async () => {
         editForm.style.display = 'block';
         li.classList.add('editing');
 
-        editForm.scrollIntoView({ behavior: 'smooth', block: 'center' }); // smooth scroll to form
+        editForm.scrollIntoView({ behavior: 'smooth', block: 'center' }); // Smooth scroll to form.
 
       }
-      // await refresh();
+      // Await refresh();
     } catch (err) {
       console.error(err);
       alert('Action failed: ' + (err?.message || 'See console'));
     }
   });
 
-  // handle the Create Task form (create-task.html)
+  // Handle the Create Task form (create-task.html)
   const createForm = document.querySelector('.task-create');
 
   if (createForm) {
@@ -292,7 +313,7 @@ window.addEventListener('DOMContentLoaded', async () => {
       const recurr = document.querySelector('#recurr').value !== 'none' ? document.querySelector('#recurr').value : null;
       const recurrUntil = document.querySelector('#recurr-until').value || null;
 
-      const dueISO = dueDate ? new Date(dueDate).toISOString() : null; // normalise to ISO or null
+      const dueISO = dueDate ? new Date(dueDate).toISOString() : null; // Normalise to ISO or null.
 
       if (!title || !description || !dueDate) {
         alert('Please fill in all required fields.');
@@ -324,13 +345,13 @@ window.addEventListener('DOMContentLoaded', async () => {
 
         alert('Task created successfully!');
         createForm.reset();
-        window.location.href = '/'; // Redirect to homepage after creation
+        window.location.href = '/'; // Redirect to homepage after creation.
       } catch (err) {
         console.error('Error creating task:', err);
         alert('Error connecting to server. Please try again later.');
       }
     });
   }
-  // initial refresh on page load
+  // Initial refresh on page load.
   refresh();
 });
