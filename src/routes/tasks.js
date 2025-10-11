@@ -1,10 +1,10 @@
 /*
-Express router for /api/tasks
-Delegates DB work to the model layer in taskModel.js
+* Express router for /api/tasks
+* Delegates DB work to the model layer in taskModel.js
 */
 
 import { Router } from 'express';
-import { body, query, param, validationResult } from 'express-validator';
+import { body, query, param, validationResult, header } from 'express-validator';
 import {
   createTask,
   listTasks,
@@ -18,15 +18,22 @@ import { requireAuth } from '../middleware/auth.js';
 
 import { sendEmail,  sendDailySummary} from '../emailService.js';
 
+import PDFDocument from 'pdfkit'; // PDF export.
+import { stringify } from 'csv-stringify/sync'; // CSV export.
+import { getDb } from '../db/db.js';
+import fs from 'fs';
+
 const router = Router();
 
-// // TEMP: dev-user for local dev
-// router.use((req, res, next) => {
-//   if (!req.user) {
-//     req.user = { id: 'dev-user' };
-//   }
-//   next();
+/*
+// TEMP: dev-user for local dev.
+router.use((req, res, next) => {
+  if (!req.user) {
+    req.user = { id: 'dev-user' };
+  }
+  next();
 // });
+*/
 
 // Return 400 with validation message when needed.
 function check(req, res) {
@@ -43,7 +50,7 @@ router.post(
   body('title').isString().trim().isLength({ min: 1, max: 200 }),
   body('status').optional().isIn(['todo', 'in_progress', 'done']),
   body('priority').optional().isIn(['low', 'medium', 'high']),
-  body('due_at').optional().isISO8601(),              // store ISO date (frontend can send 'YYYY-MM-DD')
+  body('due_at').optional().isISO8601(),  // Store ISO date (frontend can send 'YYYY-MM-DD').
   body('recur').optional({ nullable: true }).isIn(['daily', 'weekly', 'monthly']),
   body('recur_until').optional({ nullable: true }).isISO8601(),
   (req, res, next) => {
@@ -58,7 +65,7 @@ router.post(
 
     const task = createTask({ ...req.body, user_id: req.user.id });
 
-    // send email notification
+    // Send email notification.
     sendEmail(
       req.body.userEmail || process.env.GMAIL_USER, // fallback
       'New Task Created',
@@ -70,7 +77,7 @@ router.post(
   }
 );
 
-// GET /api/tasks (filters) + /api/tasks?on=YYYY-MM-DD (due-on-day)
+// GET /api/tasks (filters) + /api/tasks?on=YYYY-MM-DD (due-on-day).
 router.get(
     '/',
     query('limit').optional().isInt({ min: 1, max: 100 }).toInt(),
@@ -153,7 +160,7 @@ router.delete(
   }
 );
 
-// DELETE /api/tasks/:id/series  -> deletes the entire series of that task (optionally only future)
+// DELETE /api/tasks/:id/series  -> deletes the entire series of that task (optionally only future).
 router.delete(
     '/:id/series',
     param('id').isString().isLength({ min: 8, max: 128 }),
@@ -168,7 +175,7 @@ router.delete(
     }
 );
 
-// POST /api/tasks/email-summary  -> sends the user an email summary of their overdue and upcoming tasks
+// POST /api/tasks/email-summary  -> sends the user an email summary of their overdue and upcoming tasks.
 router.post('/email-summary', requireAuth, async (req, res) => {
   try {
     const result = await sendDailySummary(req.user.id);
@@ -177,6 +184,53 @@ router.post('/email-summary', requireAuth, async (req, res) => {
     console.error('Error sending email summary:', err);
     res.status(500).json({ success: false, message: 'Failed to send email summary' });
   }
+});
+
+// GET /api/tasks/export/csv  -> exports tasks as CSV.
+router.get('/export/csv', requireAuth, async (req, res) => {
+  const db = getDb();
+  const exportTasks = db.prepare('SELECT id, title, status, priority, due_at, recur, recur_until, created_at, updated_at FROM tasks WHERE user_id = ?').all(req.user.id);
+  
+  const csv = stringify(exportTasks, {
+    header: true,
+    columns: { id: 'ID', title: 'Title', status: 'Status', priority: 'Priority', due_at: 'Due At', recur: 'Recur', recur_until: 'Recur Until', created_at: 'Created At', updated_at: 'Updated At' }
+  });
+
+  res.setHeader('Content-Disposition', 'attachment; filename="tasks.csv"');
+  res.setHeader('Content-Type', 'text/csv');
+  res.send(csv);
+});
+
+// GET /api/tasks/export/pdf  -> exports tasks as PDF.
+router.get('/export/pdf', requireAuth, async (req, res) => {
+  const db = getDb();
+  const exportTasks = db.prepare('SELECT id, title, status, priority, due_at, recur, recur_until, created_at, updated_at FROM tasks WHERE user_id = ?').all(req.user.id);
+  
+  const documentPDF = new PDFDocument();
+  const filename = 'tasksExport.pdf';
+  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+  res.setHeader('Content-Type', 'application/pdf');
+
+  documentPDF.pipe(res);
+  documentPDF.fontSize(18).text('Task Export', { align: 'center' });
+  documentPDF.moveDown();
+
+  exportTasks.forEach((task, index) => {
+    documentPDF.fontSize(12).text(`ID: ${task.id}`);
+    documentPDF.text(`Title: ${task.title}`);
+    documentPDF.text(`Status: ${task.status}`);
+    documentPDF.text(`Priority: ${task.priority}`);
+    documentPDF.text(`Due At: ${task.due_at ? new Date(task.due_at).toLocaleDateString() : 'N/A'}`);
+    documentPDF.text(`Recur: ${task.recur || 'N/A'}`);
+    documentPDF.text(`Recur Until: ${task.recur_until ? new Date(task.recur_until).toLocaleDateString() : 'N/A'}`);
+    documentPDF.text(`Created At: ${new Date(task.created_at).toLocaleString()}`);
+    documentPDF.text(`Updated At: ${new Date(task.updated_at).toLocaleString()}`);
+    if (index < exportTasks.length - 1) {
+      documentPDF.moveDown();
+      documentPDF.moveDown();
+    }
+  });
+  documentPDF.end();
 });
 
 export default router;
