@@ -16,8 +16,7 @@ import {
 } from '../models/taskModel.js';
 import { requireAuth } from '../middleware/auth.js';
 
-// const { sendEmail } = require('../emailService');
-import { sendEmail } from '../emailService.js';
+import { sendEmail,  sendDailySummary} from '../emailService.js';
 
 const router = Router();
 
@@ -168,5 +167,16 @@ router.delete(
         res.status(200).json({ deleted });
     }
 );
+
+// POST /api/tasks/email-summary  -> sends the user an email summary of their overdue and upcoming tasks
+router.post('/email-summary', requireAuth, async (req, res) => {
+  try {
+    const result = await sendDailySummary(req.user.id);
+    res.json({ success: true, message: 'Task summary email sent successfully!', sent: result.sent });
+  } catch (err) {
+    console.error('Error sending email summary:', err);
+    res.status(500).json({ success: false, message: 'Failed to send email summary' });
+  }
+});
 
 export default router;

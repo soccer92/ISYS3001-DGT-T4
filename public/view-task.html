@@ -31,7 +31,7 @@
         <section>
             <ul id="task-list"></ul>
         </section>
-        <!-- Edit Tasks -->   
+        <!-- Edit Tasks -->
         <section>
             <form id="edit-form" style="display: none;">
                 <h2>Edit Task</h2>
@@ -82,13 +82,16 @@
                         <option value="in_progress">In Progress</option>
                         <option value="done">Completed</option>
                     </select>
-                </div>                
+                </div>
                 <!-- Submit Form -->
                 <button type="submit">Save Changes</button>
                 <button type="button" id="cancel-edit">Cancel</button>
-                <button type="button" onclick="deleteTask(document.getElementById('edit-task-id').value)">Delete</button>
+                <button type="button"
+                    onclick="deleteTask(document.getElementById('edit-task-id').value)">Delete</button>
             </form>
         </section>
+
+        <button id="email-summary-btn" type="button">Email me my task summary</button>
 
     </main>
 
@@ -136,14 +139,14 @@
             ul.innerHTML = (tasks || [])
                 .map(t => {
 
-                const pr = priorityLabels[t.priority] || t.priority;
-                const st = statusLabels[t.status] || t.status;
+                    const pr = priorityLabels[t.priority] || t.priority;
+                    const st = statusLabels[t.status] || t.status;
 
-                const dd = t.due_at
-                ? new Date(t.due_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })
-                : '';
+                    const dd = t.due_at
+                        ? new Date(t.due_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })
+                        : '';
 
-                return `        
+                    return `        
                 <li data-id="${t.id}" data-priority="${t.priority}"> 
                     <strong>${escapeHtml(t.title)}</strong>
                     <em>${escapeHtml(st)}</em>
@@ -184,7 +187,7 @@
             // edit-task-title, edit-task-desc, edit-task-priority, edit-date, edit-task-status
 
             // inital render
-            refreshEdit();           
+            refreshEdit();
 
             // patches task when edit form is submitted (Save Changes button)
             editForm.addEventListener('submit', async (e) => {
@@ -221,9 +224,9 @@
                     });
 
                     if (!res.ok) {
-                    const err = await res.json().catch(() => ({}));
-                    alert('Failed to update task: ' + (err.message || res.status));
-                    return;
+                        const err = await res.json().catch(() => ({}));
+                        alert('Failed to update task: ' + (err.message || res.status));
+                        return;
                     }
 
                     alert('Task updated successfully');
@@ -234,11 +237,34 @@
                     alert('Failed to update task: ' + err.message);
                 }
             });
-            
+
             // hide form when cancel is clicked
             cancelEdit.addEventListener('click', () => {
                 editForm.style.display = 'none';
             });
+
+            const emailBtn = document.getElementById('email-summary-btn');
+            if (emailBtn) {
+                emailBtn.addEventListener('click', async () => {
+                    emailBtn.disabled = true;
+                    emailBtn.textContent = 'Sending...';
+                    try {
+                        const res = await fetch('/api/tasks/email-summary', {
+                            method: 'POST',
+                            credentials: 'include'
+                        });
+                        const data = await res.json();
+                        if (!res.ok) throw new Error(data?.message || `HTTP ${res.status}`);
+                        alert('Email sent! Check your inbox.');
+                    } catch (err) {
+                        console.error('Email summary failed:', err);
+                        alert('Failed to send summary email.');
+                    } finally {
+                        emailBtn.disabled = false;
+                        emailBtn.textContent = 'Email me my task summary';
+                    }
+                });
+            }
         });
 
     </script>

@@ -239,6 +239,12 @@ section form input, section form textarea, section form select, #edit-form input
     cursor: pointer;
 }
 
+#email-summary-btn {
+    padding: 6px 14px;
+    margin: 12px auto;
+    cursor: pointer;
+}
+
 /* Footer */
 footer {
     /* Grace generated these lines, unless otherwise noted. */
