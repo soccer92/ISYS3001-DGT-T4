@@ -56,7 +56,13 @@ async function addTask(title) {
   const res = await apiFetch('/api/tasks', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ title, status: 'todo' })
+    body: JSON.stringify({
+      title,
+      description: 'Quick-added task',
+      status: 'todo',
+      priority: 'low',
+      // due_at: null
+    })
   });
 
   if (!res.ok) {
