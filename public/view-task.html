@@ -1,21 +1,21 @@
 <!DOCTYPE html>
 <html lang="en-AU">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>View Tasks &#8212; Task Flow</title>
     <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
     <!-- Nav -->
     <nav>
         <!-- Hamburger Functionality -->
         <div class="hamburger">
             <a href="create-task.html">Create a Task</a>
-            <a href="">View Tasks</a>
-            <a href="">Log out</a>
+            <a href="" class="active">View Tasks</a>
+            <a href="#" id="exportCSV">Export Tasks as CSV</a>
+            <a href="#" id="exportPDF">Export Tasks as PDF</a>
+            <a href="#" id="logoutLink">Log out</a>
         </div>
         <a href="javascript:void(0);" onclick="hamburgerNavToggle()">
             <img src="images/Hamburger.svg" alt="Hamburger Menu Icon">
@@ -25,27 +25,62 @@
     </nav>
 
     <h1>View Tasks</h1>
+
     <!-- Main Content -->
     <main>
+        <!-- View Tabs -->
+        <div class="view-tabs">
+            <button class="tab-button active" onclick="openView(event, 'list')">List View</button>
+            <button class="tab-button" onclick="openView(event, 'kanban')">Kanban View</button>
+            <button class="tab-button" onclick="openView(event, 'calendar')">Calendar View</button>
+        </div>
+
         <!-- Display Task List -->
-        <section>
+        <section id="list" class="content-view">
             <ul id="task-list"></ul>
         </section>
+
+        <!-- Display Kanban View -->
+        <section id="kanban" class="content-view" style="display:none;">
+            <div class="kanban-board">
+                <div class="kanban-column" data-status="todo">
+                    <h2>To Do</h2>
+                    <div id="kanban-tasks"></div>
+                </div>
+                <div class="kanban-column" data-status="in_progress">
+                    <h2>In Progress</h2>
+                    <div id="kanban-tasks"></div>
+                </div>
+                <div class="kanban-column" data-status="done">
+                    <h2>Completed</h2>
+                    <div id="kanban-tasks"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Display Calendar View -->
+        <section id="calendar" class="content-view" style="display:none;">
+            <div id="calendar-table"></div>
+        </section>
+
         <!-- Edit Tasks -->
         <section>
             <form id="edit-form" style="display: none;">
                 <h2>Edit Task</h2>
                 <input type="hidden" id="edit-task-id">
+
                 <!-- Task Title -->
                 <div class="input-wrapper">
                     <label for="edit-task-title">Task Title:</label>
                     <input type="text" id="edit-task-title" required>
                 </div>
+
                 <!-- Task Description -->
                 <div class="input-wrapper">
                     <label for="edit-task-desc">Task Description:</label>
                     <textarea id="edit-task-desc" name="edit-task-desc"></textarea>
                 </div>
+
                 <!-- Task Priority -->
                 <div class="input-wrapper">
                     <label for="edit-task-priority">Priority:</label>
@@ -55,11 +90,13 @@
                         <option value="low">Low Priority</option>
                     </select>
                 </div>
+
                 <!-- Due Date -->
                 <div class="input-wrapper">
                     <label for="edit-date">Due Date:</label>
                     <input type="date" id="edit-date" name="edit-date">
                 </div>
+
                 <!-- Task Recurrence -->
                 <div class="input-wrapper">
                     <label for="edit-task-recurr">Recurrence:</label>
@@ -70,10 +107,12 @@
                         <option value="monthly">Monthly</option>
                     </select>
                 </div>
+
                 <div class="input-wrapper">
                     <label for="edit-task-recurr-until">Repeat until:</label>
                     <input type="date" id="edit-task-recurr-until" name="edit-task-recurr-until">
                 </div>
+
                 <!-- Task Completion Status -->
                 <div class="input-wrapper">
                     <label for="edit-task-status">Status:</label>
@@ -83,16 +122,15 @@
                         <option value="done">Completed</option>
                     </select>
                 </div>
+
                 <!-- Submit Form -->
                 <button type="submit">Save Changes</button>
                 <button type="button" id="cancel-edit">Cancel</button>
-                <button type="button"
-                    onclick="deleteTask(document.getElementById('edit-task-id').value)">Delete</button>
+                <button type="button" onclick="deleteTask(document.getElementById('edit-task-id').value)">Delete</button>
             </form>
         </section>
 
         <button id="email-summary-btn" type="button">Email me my task summary</button>
-
     </main>
 
     <!-- Footer -->
@@ -116,14 +154,11 @@
     <script src="app.js"></script>
 
     <script>
-
         // Render the current task list for edit page to <ul>.
         function render(tasks) {
-
             const ul = document.getElementById('task-list');
-            if (!ul) return; // skips rendering on pages without a task list (for updateCompletionStatus() to work).
+            if (!ul) return;
 
-            // Map values to display labels
             const priorityLabels = {
                 high: "High Priority",
                 medium: "Medium Priority",
@@ -138,7 +173,6 @@
 
             ul.innerHTML = (tasks || [])
                 .map(t => {
-
                     const pr = priorityLabels[t.priority] || t.priority;
                     const st = statusLabels[t.status] || t.status;
 
@@ -146,31 +180,27 @@
                         ? new Date(t.due_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })
                         : '';
 
-                    return `        
-                <li data-id="${t.id}" data-priority="${t.priority}"> 
-                    <strong>${escapeHtml(t.title)}</strong>
-                    <em>${escapeHtml(st)}</em>
-                    ${t.due_at ? `<p><b>Due:</b> ${dd}</p>` : ''}
-                    ${t.recur ? `<p class="recur-info">Repeats ${t.recur} until ${t.recur_until ? new Date(t.recur_until).toLocaleDateString('en-AU') : '—'}</p>` : ''}
-                    <div class="task-actions">
-                        <button type="button" class="edit">Edit</button>
-                    </div>
-                </li>`;
-
+                    return `
+                        <li data-id="${t.id}" data-priority="${t.priority}">
+                            <strong>${escapeHtml(t.title)}</strong>
+                            <em>${escapeHtml(st)}</em>
+                            ${t.due_at ? `<p><b>Due:</b> ${dd}</p>` : ''}
+                            ${t.recur ? `<p class="recur-info">Repeats ${t.recur} until ${t.recur_until ? new Date(t.recur_until).toLocaleDateString('en-AU') : '—'}</p>` : ''}
+                            <div class="task-actions">
+                                <button type="button" class="edit">Edit</button>
+                            </div>
+                        </li>`;
                 })
                 .join('');
         }
 
-        // Refresh + render specifically for edit page
         async function refreshEdit() {
             const tasks = await fetchTasks();
             render(tasks);
             updateCompletionStatus();
         }
 
-        // Edit page logic
         document.addEventListener('DOMContentLoaded', () => {
-
             const editForm = document.getElementById('edit-form');
 
             const editTaskId = document.getElementById('edit-task-id');
@@ -184,27 +214,19 @@
 
             const cancelEdit = document.getElementById('cancel-edit');
 
-            // edit-task-title, edit-task-desc, edit-task-priority, edit-date, edit-task-status
-
-            // inital render
             refreshEdit();
 
-            // patches task when edit form is submitted (Save Changes button)
             editForm.addEventListener('submit', async (e) => {
-
-                e.preventDefault(); // stops page from reloading
+                e.preventDefault();
 
                 const dueValue = editDate.value ? new Date(editDate.value).toISOString() : undefined;
                 const recurValue = editTaskRecurr.value !== 'none' ? editTaskRecurr.value : undefined;
 
-
-                // if recur is set but no due date selected, warn user before sending
                 if (recurValue && !dueValue) {
                     alert('Please set a due date when you enable recurrence.');
                     return;
                 }
 
-                // dynamically build patch data to avoid sending undefined values
                 const patchData = {
                     title: editTaskTitle.value,
                     description: editTaskDesc.value,
@@ -238,7 +260,6 @@
                 }
             });
 
-            // hide form when cancel is clicked
             cancelEdit.addEventListener('click', () => {
                 editForm.style.display = 'none';
             });
@@ -267,6 +288,20 @@
             }
         });
 
+        function openView(evt, viewName) {
+            const contentViews = document.getElementsByClassName("content-view");
+            for (let i = 0; i < contentViews.length; i++) {
+                contentViews[i].style.display = "none";
+            }
+
+            const tabButtons = document.getElementsByClassName("tab-button");
+            for (let i = 0; i < tabButtons.length; i++) {
+                tabButtons[i].className = tabButtons[i].className.replace(" active", "");
+            }
+
+            document.getElementById(viewName).style.display = "block";
+            evt.currentTarget.className += " active";
+        }
     </script>
 </body>
 
