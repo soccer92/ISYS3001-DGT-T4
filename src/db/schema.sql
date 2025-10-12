@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS tasks (
   CHECK (recur IS NULL OR due_at IS NOT NULL)
 );
 
--- Simple indexes for common used filters
+-- Simple indexes for common used filters.
 CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);
 CREATE INDEX IF NOT EXISTS idx_tasks_priority ON tasks(priority);
 CREATE INDEX IF NOT EXISTS idx_tasks_due_at ON tasks(due_at);
@@ -26,7 +26,7 @@ CREATE INDEX IF NOT EXISTS idx_tasks_user_due   ON tasks(user_id, due_at);
 CREATE INDEX IF NOT EXISTS idx_tasks_series     ON tasks(series_id);
 CREATE INDEX IF NOT EXISTS idx_tasks_user_series_due ON tasks(user_id, series_id, due_at);
 
--- Users table
+-- Users table.
 CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
   email TEXT NOT NULL UNIQUE,
@@ -38,6 +38,6 @@ CREATE TABLE IF NOT EXISTS users (
   created_at TEXT NOT NULL
 );
 
--- Simple indexes for common used filters
+-- Simple indexes for common used filters.
 CREATE INDEX IF NOT EXISTS idx_users_email on users(email);
 CREATE INDEX IF NOT EXISTS idx_tasks_user_id ON tasks(user_id);
