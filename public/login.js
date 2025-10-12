@@ -1,4 +1,4 @@
-// Script for login.html file
+// Script for login.html file.
 (() => {
     const form = document.getElementById('loginForm');
     const err = document.getElementById('err');
