@@ -91,6 +91,11 @@ body {
     font-weight: bold;
 }
 
+.login .login-form form .error {
+    color: #fff;
+    font-size: 8pt;
+}
+
 /* Nav */
 nav {
     display: flex;
