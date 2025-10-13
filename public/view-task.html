@@ -274,8 +274,10 @@
             .filter(t => t.status === status)
             .map(t => `
                 <div class="kanban-task">
-                <strong>${escapeHtml(t.title)}</strong>
-                ${t.due_at ? `<p>Due: ${new Date(t.due_at).toLocaleDateString('en-AU')}</p>` : ''}
+                    <b>${t.title}</b>
+                    ${t.description ? `<p>${t.description}</p>` : ''}
+                    ${t.due_at ? `<p>Due: ${new Date(t.due_at).toLocaleDateString('en-AU')}</p>` : ''}
+                    ${t.recur ? `<p>Repeats ${t.recur} until ${t.recur_until ? new Date(t.recur_until).toLocaleDateString('en-AU') : '—'}</p>` : ''}
                 </div>
             `)
             .join('');
