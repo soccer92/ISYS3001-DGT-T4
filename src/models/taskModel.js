@@ -1,6 +1,6 @@
 /*
-Data access for "tasks"
-Central place for all SQL statements
+* Data access for "tasks"
+* Central place for all SQL statements
 Only DB read/write logic
 */
 
@@ -8,7 +8,7 @@ import { getDb } from '../db/db.js';
 import { randomUUID } from 'crypto';
 
 const db = getDb();
-const ISO = d => new Date(d).toISOString().slice(0, 19) + 'Z'; // normalising to seconds
+const ISO = d => new Date(d).toISOString().slice(0, 19) + 'Z'; // Normalising to seconds.
 
 function addDays(d, n) { const x = new Date(d); x.setDate(x.getDate() + n); return x; }
 function addWeeks(d, n) { return addDays(d, 7 * n); }
@@ -16,15 +16,15 @@ function addMonthsSafe(d, n) {
     const base = new Date(d);
     const day = base.getDate();
 
-    // jump to 1st of target month to avoid overflow
+    // Jump to 1st of target month to avoid overflow.
     const target = new Date(base);
     target.setDate(1);
     target.setMonth(target.getMonth() + n);
 
-    // days in target month
+    // Days in target month.
     const daysInTarget = new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate();
 
-    // clamp to last day if original day doesn't exist in target month
+    // Clamp to last day if original day doesn't exist in target month.
     target.setDate(Math.min(day, daysInTarget));
     return target;
 }
@@ -45,7 +45,7 @@ export function createTask(body) {
   const now = new Date().toISOString();
   const id = randomUUID();
 
-  const recur = body.recur ?? null;                 // 'daily' | 'weekly' | 'monthly' | null
+  const recur = body.recur ?? null;                 // 'Daily' | 'Weekly' | 'Monthly' | null
   const recur_until = body.recur_until ?? null;     // ISO | null
   const series_id = recur ? (body.series_id || randomUUID()) : null;
 
@@ -53,6 +53,7 @@ export function createTask(body) {
   const row = {
     id,
     title: (body.title || '').trim(),
+    description: body.description || null,
     status: body.status || 'todo', // default status
     priority: body.priority || 'low', // default priority
     due_at: body.due_at || null,
@@ -67,8 +68,8 @@ export function createTask(body) {
 
   // Insert a new task using parameters.
   db.prepare(`
-    INSERT INTO tasks (id, title, status, priority, due_at, user_id, created_at, updated_at, series_id, recur, recur_until, parent_id)
-    VALUES (@id, @title, @status, @priority, @due_at, @user_id, @created_at, @updated_at, @series_id, @recur, @recur_until, @parent_id)
+    INSERT INTO tasks (id, title, description, status, priority, due_at, user_id, created_at, updated_at, series_id, recur, recur_until, parent_id)
+    VALUES (@id, @title, @description, @status, @priority, @due_at, @user_id, @created_at, @updated_at, @series_id, @recur, @recur_until, @parent_id)
   `).run(row);
 
   if (recur && recur_until && row.due_at) {
@@ -78,13 +79,13 @@ export function createTask(body) {
   return row;
 }
 
-// LIST tasks with basic filtering (includes recurring instances)
+// LIST tasks with basic filtering (includes recurring instances).
 export function listTasks({ limit = 20, offset = 0, status, priority, q, userId } = {}) {
   // Collect WHERE clauses & named params.
   const where = [];
   const params = {};
 
-  // Ensure only returning the current user's tasks
+  // Ensure only returning the current user's tasks.
   where.push('user_id = @userId');      
   params.userId = userId;
 
@@ -178,7 +179,7 @@ export function updateTask(id, patch, userId) {
 
 // Expands a recurring "template" task into concrete dated instances up to a horizon.
 export function expandRecurrence(templateTask, { horizonDays = 60 } = {}) {
-    // checks if not a recurring template
+    // Checks if not a recurring template.
     if (!templateTask.recur || !templateTask.recur_until) return 0;
     if (!templateTask.due_at) return 0;
 
@@ -193,12 +194,12 @@ export function expandRecurrence(templateTask, { horizonDays = 60 } = {}) {
   `);
 
     let created = 0;
-    // Iterate over each occurrence date (daily/weekly/monthly) between start and effective end
+    // Iterate over each occurrence date (daily/weekly/monthly) between start and effective end.
     for (const dueISO of recurDates(templateTask.due_at, effectiveUntil.toISOString(), templateTask.recur)) {
         const sameInstant = new Date(dueISO).getTime() === new Date(templateTask.due_at).getTime();
         if (sameInstant) continue;
 
-        // Prevent duplicates if expand runs more than once
+        // Prevent duplicates if expand runs more than once.
         const exists = db.prepare(
             `SELECT 1 FROM tasks WHERE user_id = ? AND series_id = ? AND due_at = ? LIMIT 1`
         ).get(templateTask.user_id, templateTask.series_id, dueISO);
@@ -221,7 +222,7 @@ export function expandRecurrence(templateTask, { horizonDays = 60 } = {}) {
     return created;
 }
 
-// // Lists tasks whose due_at falls on a specific local calendar day
+// Lists tasks whose due_at falls on a specific local calendar day.
 export function listTasksOnDate(userId, yyyy_mm_dd, { limit = 50, offset = 0 } = {}) {
     const start = new Date(`${yyyy_mm_dd}T00:00:00`);
     const end = new Date(`${yyyy_mm_dd}T23:59:59.999`);
@@ -241,7 +242,7 @@ export function listTasksOnDate(userId, yyyy_mm_dd, { limit = 50, offset = 0 } =
     return { total, limit, offset, items };
 }
 
-// Deletes tasks belonging to a recurrence series
+// Deletes tasks belonging to a recurrence series.
 export function deleteSeriesBySeriesId(seriesId, userId, { onlyFuture = false } = {}) {
     if (onlyFuture) {
         const nowISO = new Date().toISOString();
@@ -257,7 +258,7 @@ export function deleteSeriesBySeriesId(seriesId, userId, { onlyFuture = false } 
     }
 }
 
-// Deletes its whole series by task id
+// Deletes its whole series by task ID.
 export function deleteSeriesByTaskId(taskId, userId, opts = {}) {
     const row = db.prepare(
         `SELECT series_id FROM tasks WHERE id = ? AND user_id = ?`
