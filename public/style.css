@@ -340,6 +340,7 @@ section form input, section form textarea, section form select, #edit-form input
 .kanban-board .kanban-column .kanban-tasks .kanban-task {
     background: #fff;
     padding: 12px;
+    font-size: 10pt;
 }
 
 /* Footer */
