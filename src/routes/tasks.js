@@ -233,7 +233,7 @@ router.get('/export/pdf', requireAuth, async (req, res) => {
   documentPDF.moveDown();
 
   exportTasks.forEach((task, index) => {
-    documentPDF.fontSize(12).text(`ID: ${task.id}`);
+    documentPDF.fontSize(10).text(`ID: ${task.id}`);
     documentPDF.text(`Title: ${task.title}`);
     documentPDF.text(`Description: ${task.description}`);
     documentPDF.text(`Status: ${task.status}`);
