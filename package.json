@@ -30,12 +30,14 @@
     "better-sqlite3": "^9.4.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
+    "csv-stringify": "^6.6.0",
     "dayjs": "^1.11.18",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "express-validator": "^7.0.1",
     "jsonwebtoken": "^9.0.2",
     "node-cron": "^4.2.1",
-    "nodemailer": "^7.0.9"
+    "nodemailer": "^7.0.9",
+    "pdfkit": "^0.17.2"
   }
 }
