@@ -1,10 +1,10 @@
 /*
-* Express router for /api/tasks
-* Delegates DB work to the model layer in taskModel.js
-*/
+ * Express router for /api/tasks
+ * Delegates DB work to the model layer in taskModel.js
+ */
 
 import { Router } from 'express';
-import { body, query, param, validationResult, header } from 'express-validator';
+import { body, query, param, validationResult } from 'express-validator';
 import {
   createTask,
   listTasks,
@@ -16,12 +16,11 @@ import {
 } from '../models/taskModel.js';
 import { requireAuth } from '../middleware/auth.js';
 
-import { sendEmail,  sendDailySummary} from '../emailService.js';
+import { sendEmail, sendDailySummary } from '../emailService.js';
 
 import PDFDocument from 'pdfkit'; // PDF export.
 import { stringify } from 'csv-stringify/sync'; // CSV export.
 import { getDb } from '../db/db.js';
-import fs from 'fs';
 
 const router = Router();
 
@@ -32,7 +31,7 @@ router.use((req, res, next) => {
     req.user = { id: 'dev-user' };
   }
   next();
-// });
+});
 */
 
 // Return 400 with validation message when needed.
@@ -50,14 +49,14 @@ router.post(
   body('title').isString().trim().isLength({ min: 1, max: 200 }),
   body('status').optional().isIn(['todo', 'in_progress', 'done']),
   body('priority').optional().isIn(['low', 'medium', 'high']),
-  body('due_at').optional().isISO8601(),  // Store ISO date (frontend can send 'YYYY-MM-DD').
+  body('due_at').optional().isISO8601(), // Store ISO date (frontend can send 'YYYY-MM-DD').
   body('recur').optional({ nullable: true }).isIn(['daily', 'weekly', 'monthly']),
   body('recur_until').optional({ nullable: true }).isISO8601(),
   (req, res, next) => {
-      if (req.body?.recur && !req.body?.due_at) {
-          return res.status(400).json({ message: 'due_at is required when recur is set' });
-      }
-      next();
+    if (req.body?.recur && !req.body?.due_at) {
+      return res.status(400).json({ message: 'due_at is required when recur is set' });
+    }
+    next();
   },
   (req, res) => {
     const v = check(req, res);
@@ -69,8 +68,7 @@ router.post(
     sendEmail(
       req.body.userEmail || process.env.GMAIL_USER, // fallback
       'New Task Created',
-      `Your new task "${task.title}" has been created with priority ${task.priority ?? "none"}.`
-      // `Your new task "${task.title}" has been created with priority ${task.priority ?? "none"} and is due on ${dueDate}.`
+      `Your new task "${task.title}" has been created with priority ${task.priority ?? 'none'}.`
     );
 
     res.status(201).json(task);
@@ -79,31 +77,31 @@ router.post(
 
 // GET /api/tasks (filters) + /api/tasks?on=YYYY-MM-DD (due-on-day).
 router.get(
-    '/',
-    query('limit').optional().isInt({ min: 1, max: 100 }).toInt(),
-    query('offset').optional().isInt({ min: 0 }).toInt(),
-    query('status').optional().isIn(['todo', 'in_progress', 'done']),
-    query('priority').optional().isIn(['low', 'medium', 'high']),
-    query('q').optional().isString().trim().isLength({ min: 1, max: 200 }),
-    query('on').optional().isISO8601(),
-    (req, res) => {
-        const v = check(req, res);
-        if (v) return v;
+  '/',
+  query('limit').optional().isInt({ min: 1, max: 100 }).toInt(),
+  query('offset').optional().isInt({ min: 0 }).toInt(),
+  query('status').optional().isIn(['todo', 'in_progress', 'done']),
+  query('priority').optional().isIn(['low', 'medium', 'high']),
+  query('q').optional().isString().trim().isLength({ min: 1, max: 200 }),
+  query('on').optional().isISO8601(),
+  (req, res) => {
+    const v = check(req, res);
+    if (v) return v;
 
-        const { limit = 20, offset = 0, status, priority, q, on } = req.query;
+    const { limit = 20, offset = 0, status, priority, q, on } = req.query;
 
-        if (on) {
-            const data = listTasksOnDate(req.user.id, on, { limit, offset });
-            return res.json(data);
-        }
-
-        const data = listTasks({ limit, offset, status, priority, q, userId: req.user.id });
-        const normalized = Array.isArray(data)
-            ? { total: data.length, limit, offset, items: data }
-            : data;
-
-        res.json(normalized);
+    if (on) {
+      const data = listTasksOnDate(req.user.id, on, { limit, offset });
+      return res.json(data);
     }
+
+    const data = listTasks({ limit, offset, status, priority, q, userId: req.user.id });
+    const normalized = Array.isArray(data)
+      ? { total: data.length, limit, offset, items: data }
+      : data;
+
+    res.json(normalized);
+  }
 );
 
 // GET /api/tasks/:id (read single).
@@ -127,14 +125,14 @@ router.patch(
   body('title').optional().isString().trim().isLength({ min: 1, max: 200 }),
   body('status').optional().isIn(['todo', 'in_progress', 'done']),
   body('priority').optional().isIn(['low', 'medium', 'high']),
-  body('due_at').optional().isISO8601(),              // store ISO date (frontend can send 'YYYY-MM-DD')
+  body('due_at').optional().isISO8601(), // Store ISO date (frontend can send 'YYYY-MM-DD').
   body('recur').optional({ nullable: true }).isIn(['daily', 'weekly', 'monthly']),
   body('recur_until').optional().isISO8601(),
   (req, res, next) => {
-        if (req.body?.recur && !req.body?.due_at) {
-            return res.status(400).json({ message: 'due_at is required when recur is set' });
-        }
-        next();
+    if (req.body?.recur && !req.body?.due_at) {
+      return res.status(400).json({ message: 'due_at is required when recur is set' });
+    }
+    next();
   },
   (req, res) => {
     const v = check(req, res);
@@ -160,22 +158,22 @@ router.delete(
   }
 );
 
-// DELETE /api/tasks/:id/series  -> deletes the entire series of that task (optionally only future).
+// DELETE /api/tasks/:id/series -> deletes the entire series of that task (optionally only future).
 router.delete(
-    '/:id/series',
-    param('id').isString().isLength({ min: 8, max: 128 }),
-    query('futureOnly').optional().isBoolean().toBoolean(),
-    (req, res) => {
-        const v = check(req, res);
-        if (v) return v;
+  '/:id/series',
+  param('id').isString().isLength({ min: 8, max: 128 }),
+  query('futureOnly').optional().isBoolean().toBoolean(),
+  (req, res) => {
+    const v = check(req, res);
+    if (v) return v;
 
-        const deleted = deleteSeriesByTaskId(req.params.id, req.user.id, { onlyFuture: !!req.query.futureOnly });
-        if (!deleted) return res.status(404).json({ message: 'Not found or not a series' });
-        res.status(200).json({ deleted });
-    }
+    const deleted = deleteSeriesByTaskId(req.params.id, req.user.id, { onlyFuture: !!req.query.futureOnly });
+    if (!deleted) return res.status(404).json({ message: 'Not found or not a series' });
+    res.status(200).json({ deleted });
+  }
 );
 
-// POST /api/tasks/email-summary  -> sends the user an email summary of their overdue and upcoming tasks.
+// POST /api/tasks/email-summary -> sends the user an email summary of their overdue and upcoming tasks.
 router.post('/email-summary', requireAuth, async (req, res) => {
   try {
     const result = await sendDailySummary(req.user.id);
@@ -186,14 +184,29 @@ router.post('/email-summary', requireAuth, async (req, res) => {
   }
 });
 
-// GET /api/tasks/export/csv  -> exports tasks as CSV.
+// GET /api/tasks/export/csv -> exports tasks as CSV.
 router.get('/export/csv', requireAuth, async (req, res) => {
   const db = getDb();
-  const exportTasks = db.prepare('SELECT id, title, status, priority, due_at, recur, recur_until, created_at, updated_at FROM tasks WHERE user_id = ?').all(req.user.id);
-  
+  const exportTasks = db
+    .prepare(
+      'SELECT id, title, description, status, priority, due_at, recur, recur_until, created_at, updated_at FROM tasks WHERE user_id = ?'
+    )
+    .all(req.user.id);
+
   const csv = stringify(exportTasks, {
     header: true,
-    columns: { id: 'ID', title: 'Title', status: 'Status', priority: 'Priority', due_at: 'Due At', recur: 'Recur', recur_until: 'Recur Until', created_at: 'Created At', updated_at: 'Updated At' }
+    columns: {
+      id: 'ID',
+      title: 'Title',
+      description: 'Description',
+      status: 'Status',
+      priority: 'Priority',
+      due_at: 'Due At',
+      recur: 'Recur',
+      recur_until: 'Recur Until',
+      created_at: 'Created At',
+      updated_at: 'Updated At'
+    }
   });
 
   res.setHeader('Content-Disposition', 'attachment; filename="tasks.csv"');
@@ -201,11 +214,15 @@ router.get('/export/csv', requireAuth, async (req, res) => {
   res.send(csv);
 });
 
-// GET /api/tasks/export/pdf  -> exports tasks as PDF.
+// GET /api/tasks/export/pdf -> exports tasks as PDF.
 router.get('/export/pdf', requireAuth, async (req, res) => {
   const db = getDb();
-  const exportTasks = db.prepare('SELECT id, title, status, priority, due_at, recur, recur_until, created_at, updated_at FROM tasks WHERE user_id = ?').all(req.user.id);
-  
+  const exportTasks = db
+    .prepare(
+      'SELECT id, title, description, status, priority, due_at, recur, recur_until, created_at, updated_at FROM tasks WHERE user_id = ?'
+    )
+    .all(req.user.id);
+
   const documentPDF = new PDFDocument();
   const filename = 'tasksExport.pdf';
   res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
@@ -218,6 +235,7 @@ router.get('/export/pdf', requireAuth, async (req, res) => {
   exportTasks.forEach((task, index) => {
     documentPDF.fontSize(12).text(`ID: ${task.id}`);
     documentPDF.text(`Title: ${task.title}`);
+    documentPDF.text(`Description: ${task.description}`);
     documentPDF.text(`Status: ${task.status}`);
     documentPDF.text(`Priority: ${task.priority}`);
     documentPDF.text(`Due At: ${task.due_at ? new Date(task.due_at).toLocaleDateString() : 'N/A'}`);
