@@ -168,10 +168,6 @@ main {
     flex-grow: 1;
 }
 
-h1, h2, p {
-    text-align: center;
-}
-
 /* Section */
 section {
     display: flex;
@@ -224,6 +220,51 @@ section form input, section form textarea, section form select, #edit-form input
     height: auto; /* Ensures it matches the input height. */
 }
 
+#email-summary-btn {
+    padding: 8px;
+    margin: 12px auto;
+    cursor: pointer;
+    border: 1px solid #333;
+}
+
+/* View Task Tabs */
+.view-tabs {
+    display: flex;
+    align-items: center;
+    background: #ccc;
+}
+
+.view-tabs .tab-button {
+    background: none;
+    border: none;
+    padding: 12px;
+    cursor: pointer;
+    font-size: 10pt;
+}
+
+.view-tabs .tab-button:hover {
+    background: #eee;
+}
+
+.view-tabs .tab-button.active {
+    background: #fff;
+    color: #000;
+    font-weight: bold;
+}
+
+.content-view {
+    padding: 12px;
+    width: 100%;
+}
+
+/* Display Task List */
+#list {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    justify-content: center;
+}
+
 #task-list {
     list-style: none;
     margin: 16px 0;
@@ -267,37 +308,40 @@ section form input, section form textarea, section form select, #edit-form input
     cursor: pointer;
 }
 
-#email-summary-btn {
-    padding: 6px 14px;
-    margin: 12px auto;
-    cursor: pointer;
-}
-
-/* View Task Tabs */
-.view-tabs {
+/* Display Kanban View */
+.kanban-board {
     display: flex;
-    align-items: center;
-    background: #ddd;
-}
-
-.view-tabs .tab-button {
-    background: none;
-    border: none;
+    flex-wrap: wrap;
     padding: 12px;
-    cursor: pointer;
-    font-size: 10pt;
+    gap: 12px;
+    width: 100%;
+    justify-content: space-between;
 }
 
-.view-tabs .tab-button:hover {
+.kanban-board .kanban-column {
     background: #eee;
+    padding: 12px;
+    flex: 1;
+    min-width: 300px;
+    border: 1px solid #333;
 }
 
-.view-tabs .tab-button.active {
-    background: #fff;
-    color: #000;
-    font-weight: bold;
+.kanban-board .kanban-column h2 {
+    color: #6699ff;
+    text-align: center;
 }
-  
+
+.kanban-board .kanban-column .kanban-tasks {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.kanban-board .kanban-column .kanban-tasks .kanban-task {
+    background: #fff;
+    padding: 12px;
+}
+
 /* Footer */
 footer {
     /* Grace generated these lines, unless otherwise noted. */
