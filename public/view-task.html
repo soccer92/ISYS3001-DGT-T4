@@ -23,16 +23,14 @@
         <a href="index.html" class="application-title">Task Flow</a>
         <img src="images/Task-Flow-Logo.png" alt="Task Flow Logo" class="logo">
     </nav>
-
-    <h1>View Tasks</h1>
-
+    <h1 style="text-align: center;">View Tasks</h1>
     <!-- Main Content -->
     <main>
+        <button id="email-summary-btn" type="button">Email me Task Summary</button>
         <!-- View Tabs -->
         <div class="view-tabs">
             <button class="tab-button active" onclick="openView(event, 'list')">List View</button>
             <button class="tab-button" onclick="openView(event, 'kanban')">Kanban View</button>
-            <button class="tab-button" onclick="openView(event, 'calendar')">Calendar View</button>
         </div>
 
         <!-- Display Task List -->
@@ -45,22 +43,17 @@
             <div class="kanban-board">
                 <div class="kanban-column" data-status="todo">
                     <h2>To Do</h2>
-                    <div id="kanban-tasks"></div>
+                    <div class="kanban-tasks"></div>
                 </div>
                 <div class="kanban-column" data-status="in_progress">
                     <h2>In Progress</h2>
-                    <div id="kanban-tasks"></div>
+                    <div class="kanban-tasks"></div>
                 </div>
                 <div class="kanban-column" data-status="done">
                     <h2>Completed</h2>
-                    <div id="kanban-tasks"></div>
+                    <div class="kanban-tasks"></div>
                 </div>
             </div>
-        </section>
-
-        <!-- Display Calendar View -->
-        <section id="calendar" class="content-view" style="display:none;">
-            <div id="calendar-table"></div>
         </section>
 
         <!-- Edit Tasks -->
@@ -129,8 +122,6 @@
                 <button type="button" onclick="deleteTask(document.getElementById('edit-task-id').value)">Delete</button>
             </form>
         </section>
-
-        <button id="email-summary-btn" type="button">Email me my task summary</button>
     </main>
 
     <!-- Footer -->
@@ -143,55 +134,32 @@
     <script>
         function hamburgerNavToggle() {
             var hamburgerLinks = document.getElementsByClassName("hamburger")[0];
-            if (hamburgerLinks.style.display === "block") {
-                hamburgerLinks.style.display = "none";
-            } else {
-                hamburgerLinks.style.display = "block";
-            }
+            hamburgerLinks.style.display = hamburgerLinks.style.display === "block" ? "none" : "block";
         }
     </script>
-
-    <script src="app.js"></script>
-
     <script>
-        // Render the current task list for edit page to <ul>.
         function render(tasks) {
             const ul = document.getElementById('task-list');
             if (!ul) return;
 
-            const priorityLabels = {
-                high: "High Priority",
-                medium: "Medium Priority",
-                low: "Low Priority"
-            };
+            const priorityLabels = { high: "High Priority", medium: "Medium Priority", low: "Low Priority" };
+            const statusLabels = { todo: "To Do", in_progress: "In Progress", done: "Completed" };
 
-            const statusLabels = {
-                todo: "To Do",
-                in_progress: "In Progress",
-                done: "Completed"
-            };
-
-            ul.innerHTML = (tasks || [])
-                .map(t => {
-                    const pr = priorityLabels[t.priority] || t.priority;
-                    const st = statusLabels[t.status] || t.status;
-
-                    const dd = t.due_at
-                        ? new Date(t.due_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })
-                        : '';
-
-                    return `
-                        <li data-id="${t.id}" data-priority="${t.priority}">
-                            <strong>${escapeHtml(t.title)}</strong>
-                            <em>${escapeHtml(st)}</em>
-                            ${t.due_at ? `<p><b>Due:</b> ${dd}</p>` : ''}
-                            ${t.recur ? `<p class="recur-info">Repeats ${t.recur} until ${t.recur_until ? new Date(t.recur_until).toLocaleDateString('en-AU') : '—'}</p>` : ''}
-                            <div class="task-actions">
-                                <button type="button" class="edit">Edit</button>
-                            </div>
-                        </li>`;
-                })
-                .join('');
+            ul.innerHTML = (tasks || []).map(t => {
+                const pr = priorityLabels[t.priority] || t.priority;
+                const st = statusLabels[t.status] || t.status;
+                const dd = t.due_at ? new Date(t.due_at).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+                return `
+                    <li data-id="${t.id}" data-priority="${t.priority}">
+                        <strong>${escapeHtml(t.title)}</strong>
+                        <em>${escapeHtml(st)}</em>
+                        ${t.due_at ? `<p><b>Due:</b> ${dd}</p>` : ''}
+                        ${t.recur ? `<p class="recur-info">Repeats ${t.recur} until ${t.recur_until ? new Date(t.recur_until).toLocaleDateString('en-AU') : '—'}</p>` : ''}
+                        <div class="task-actions">
+                            <button type="button" class="edit">Edit</button>
+                        </div>
+                    </li>`;
+            }).join('');
         }
 
         async function refreshEdit() {
@@ -202,7 +170,6 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             const editForm = document.getElementById('edit-form');
-
             const editTaskId = document.getElementById('edit-task-id');
             const editTaskTitle = document.getElementById('edit-task-title');
             const editTaskDesc = document.getElementById('edit-task-desc');
@@ -211,7 +178,6 @@
             const editTaskRecurr = document.getElementById('edit-task-recurr');
             const editTaskRecurrUntil = document.getElementById('edit-task-recurr-until');
             const editTaskStatus = document.getElementById('edit-task-status');
-
             const cancelEdit = document.getElementById('cancel-edit');
 
             refreshEdit();
@@ -235,8 +201,7 @@
                 };
                 if (dueValue) patchData.due_at = dueValue;
                 if (recurValue) patchData.recur = recurValue;
-                if (editTaskRecurrUntil.value)
-                    patchData.recur_until = new Date(editTaskRecurrUntil.value).toISOString();
+                if (editTaskRecurrUntil.value) patchData.recur_until = new Date(editTaskRecurrUntil.value).toISOString();
 
                 try {
                     const res = await fetch(`/api/tasks/${editTaskId.value}`, {
@@ -254,7 +219,6 @@
                     alert('Task updated successfully');
                     editForm.style.display = 'none';
                     refreshEdit();
-
                 } catch (err) {
                     alert('Failed to update task: ' + err.message);
                 }
@@ -287,22 +251,37 @@
                 });
             }
         });
-
+    </script>
+    <script>
         function openView(evt, viewName) {
-            const contentViews = document.getElementsByClassName("content-view");
-            for (let i = 0; i < contentViews.length; i++) {
-                contentViews[i].style.display = "none";
-            }
+            document.querySelectorAll('.content-view').forEach(view => view.style.display = 'none');
+            document.querySelectorAll('.tab-button').forEach(button => button.classList.remove('active'));
 
-            const tabButtons = document.getElementsByClassName("tab-button");
-            for (let i = 0; i < tabButtons.length; i++) {
-                tabButtons[i].className = tabButtons[i].className.replace(" active", "");
-            }
+            document.getElementById(viewName).style.display = 'block';
+            evt.currentTarget.classList.add('active');
 
-            document.getElementById(viewName).style.display = "block";
-            evt.currentTarget.className += " active";
+            if (viewName === 'list') refreshEdit();
+            if (viewName === 'kanban') renderKanban();
+            if (viewName !== 'list') document.getElementById('edit-form').style.display = 'none';
+        }
+
+        async function renderKanban() {
+            const tasks = await fetchTasks(); // Refers to app.js.
+            document.querySelectorAll('.kanban-column').forEach(col => {
+            const status = col.dataset.status;
+            const card = col.querySelector('.kanban-tasks');
+            card.innerHTML = tasks
+            .filter(t => t.status === status)
+            .map(t => `
+                <div class="kanban-task">
+                <strong>${escapeHtml(t.title)}</strong>
+                ${t.due_at ? `<p>Due: ${new Date(t.due_at).toLocaleDateString('en-AU')}</p>` : ''}
+                </div>
+            `)
+            .join('');
+            });
         }
     </script>
+    <script src="app.js"></script>
 </body>
-
 </html>
