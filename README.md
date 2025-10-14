@@ -23,12 +23,22 @@ run: npm run db:migrate:recur
 
 ### Creating User via Terminal
 
-run: npm run db:seed:user
+run: npm run db:seed:user 
+Will allow access via "test@gmail.com" "Password123!"
 
-or to create personal one
+### Create personal login
 
 run: npm run db:seed:user test@test.com Password123
 
 ### Seeding Example Tasks
 
 run: npm run db:seed
+
+## Any additional issues with Database
+Warning: This will delete and restart the database.
+
+run command: del .localdb\tasks.sqlite
+
+then proceed with initialising.
+
+run: npm run db:init
