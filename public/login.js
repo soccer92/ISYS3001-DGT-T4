@@ -5,13 +5,30 @@
 
     if (!form) return;
 
+    // Read ?next from the URL (default to /index.html)
+    function getNextUrl() {
+        const params = new URLSearchParams(location.search);
+        let nextUrl = params.get('next') || '/index.html';
+
+        // Safety: force same-origin, relative path only
+        try {
+            const u = new URL(nextUrl, location.origin);
+            if (u.origin !== location.origin) nextUrl = '/index.html';
+            // Prevent protocol-relative //evil.com
+            if (!u.pathname.startsWith('/')) nextUrl = '/index.html';
+        } catch {
+            nextUrl = '/index.html';
+        }
+        return nextUrl;
+    }
+
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         err.textContent = '';
 
         const fd = new FormData(form);
         const body = {
-            email: fd.get('email'),
+            email: String(fd.get('email') || '').trim().toLowerCase(),
             password: fd.get('password')
         };
 
@@ -32,6 +49,9 @@
             return;
         }
 
-        window.location.href = '/index.html';
+        window.location.href = getNextUrl();
+    } catch (ex) {
+        err.textContent = 'Network error. Please try again.';
+    }
     })
 })();

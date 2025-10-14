@@ -11,7 +11,7 @@
         <div class="background"></div>
         <div class="login-form">
             <h2>Task Flow</h2>
-            <form id="loginForm" novalidate>
+            <form id="loginForm" novalidate autocomplete="on">
                 <label for="email">Email:</label>
                 <input type="email" id="email" name="email" required autocomplete="email" inputmode="email">
                 <label for="password">Password:</label>
@@ -19,7 +19,9 @@
                 <button type="submit">Login</button>
                 <div class="error" id="err"></div>
             </form>
-            <p>No account? <a href="/register.html">Create one now!</a></p>
+            <!-- remove comment section once register.html is created
+                <p>No account? <a href="/register.html">Create one now!</a></p>
+            -->
         </div>
     </div>
     <script src="/login.js" defer></script>
