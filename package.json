@@ -23,6 +23,7 @@
     "db:seed": "node src/db/db.js --seed",
     "db:seed:user": "node src/db/db.js --user",
     "db:migrate:users": "node src/db/migrate-users.js",
+    "db:migrate:desc": "node src/db/migrate-description.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "db:migrate:recur": "node src/db/migrate-recurring.js"
   },
