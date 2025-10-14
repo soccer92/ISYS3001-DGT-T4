@@ -168,6 +168,29 @@
             updateCompletionStatus();
         }
 
+        async function fetchTaskById(id) {
+            const res = await fetch(`/api/tasks/${id}`, { credentials: 'include' });
+            if (!res.ok) throw new Error(`Failed to load task ${id}`);
+            return res.json();
+        }
+
+        function populateEditForm(task) {
+            const editForm = document.getElementById('edit-form');
+            document.getElementById('edit-task-id').value = task.id;
+            document.getElementById('edit-task-title').value = task.title || '';
+            document.getElementById('edit-task-desc').value = task.description || '';
+            document.getElementById('edit-task-priority').value = task.priority || 'low';
+            document.getElementById('edit-task-status').value = task.status || 'todo';
+
+            const toDateInput = (iso) => iso ? new Date(iso).toISOString().slice(0, 10) : '';
+            document.getElementById('edit-date').value = toDateInput(task.due_at);
+            document.getElementById('edit-task-recurr').value = task.recur || 'none';
+            document.getElementById('edit-task-recurr-until').value = toDateInput(task.recur_until);
+
+            editForm.style.display = 'block';
+            editForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             const editForm = document.getElementById('edit-form');
             const editTaskId = document.getElementById('edit-task-id');
@@ -181,6 +204,25 @@
             const cancelEdit = document.getElementById('cancel-edit');
 
             refreshEdit();
+
+            const ul = document.getElementById('task-list');
+            if (ul) {
+                ul.addEventListener('click', async (e) => {
+                    const btn = e.target.closest('button.edit');
+                    if (!btn) return;
+
+                    const li = btn.closest('li[data-id]');
+                    if (!li) return;
+
+                    try {
+                        const task = await fetchTaskById(li.dataset.id);
+                        populateEditForm(task);
+                    } catch (err) {
+                        console.error(err);
+                        alert('Could not open task for editing.');
+                    }
+                });
+            }
 
             editForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
