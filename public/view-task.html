@@ -162,10 +162,13 @@
             }).join('');
         }
 
+        let lastTasks = [];
+
         async function refreshEdit() {
             const tasks = await fetchTasks();
+            lastTasks = tasks;
             render(tasks);
-            updateCompletionStatus();
+            if (typeof updateCompletionStatus === 'function') updateCompletionStatus();
         }
 
         async function fetchTaskById(id) {
@@ -202,7 +205,6 @@
             const editTaskRecurrUntil = document.getElementById('edit-task-recurr-until');
             const editTaskStatus = document.getElementById('edit-task-status');
             const cancelEdit = document.getElementById('cancel-edit');
-
             refreshEdit();
 
             const ul = document.getElementById('task-list');
@@ -214,13 +216,16 @@
                     const li = btn.closest('li[data-id]');
                     if (!li) return;
 
-                    try {
-                        const task = await fetchTaskById(li.dataset.id);
-                        populateEditForm(task);
-                    } catch (err) {
-                        console.error(err);
+                    const id = li.dataset.id;
+                    const task = (lastTasks || []).find(t => String(t.id) === String(id));
+
+                    if (!task) {
+                        console.error('Task not found in cache for id:', id);
                         alert('Could not open task for editing.');
+                        return;
                     }
+
+                    populateEditForm(task);
                 });
             }
 
