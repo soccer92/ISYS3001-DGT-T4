@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en-AU">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>View Tasks &#8212; Task Flow</title>
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
     <!-- Nav -->
     <nav>
@@ -119,7 +121,8 @@
                 <!-- Submit Form -->
                 <button type="submit">Save Changes</button>
                 <button type="button" id="cancel-edit">Cancel</button>
-                <button type="button" onclick="deleteTask(document.getElementById('edit-task-id').value)">Delete</button>
+                <button type="button"
+                    onclick="deleteTask(document.getElementById('edit-task-id').value)">Delete</button>
             </form>
         </section>
     </main>
@@ -211,10 +214,10 @@
             document.getElementById('edit-date').value = toDateInput(task.due_at);
             document.getElementById('edit-task-recurr').value = task.recur || 'none';
             document.getElementById('edit-task-recurr-until').value = toDateInput(task.recur_until);
-
-            editForm.style.display = 'block';
-            editForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            
         }
+
+        let currentFormParent = null;
 
         let editDelegationBound = false;
         function setupEditDelegation() {
@@ -237,7 +240,7 @@
                 }
 
 
-                
+
                 const task = lastTasks.find(t => String(t.id) === String(id));
                 console.log('Matched task:', task);
 
@@ -246,8 +249,21 @@
                     alert('Could not open task for editing.');
                     return;
                 }
-                                
+
+                const editForm = document.getElementById('edit-form');
+
                 populateEditForm(task);
+
+                // Move form below the selected task.
+                if(currentFormParent && currentFormParent !== li) {
+                    currentFormParent.classList.remove('editing');
+                }
+                currentFormParent = li;
+                li.after(editForm);
+                editForm.style.display = 'block';
+                li.classList.add('editing');
+
+                editForm.scrollIntoView({ behavior: 'smooth', block: 'center' }); // Smooth scroll to form.
             });
 
             editDelegationBound = true;
@@ -270,11 +286,11 @@
         async function renderKanban() {
             const tasks = await fetchTasks(); // Refers to app.js.
             document.querySelectorAll('.kanban-column').forEach(col => {
-            const status = col.dataset.status;
-            const card = col.querySelector('.kanban-tasks');
-            card.innerHTML = tasks
-            .filter(t => t.status === status)
-            .map(t => `
+                const status = col.dataset.status;
+                const card = col.querySelector('.kanban-tasks');
+                card.innerHTML = tasks
+                    .filter(t => t.status === status)
+                    .map(t => `
                 <div class="kanban-task">
                     <b>${t.title}</b>
                     ${t.description ? `<p>${t.description}</p>` : ''}
@@ -282,7 +298,7 @@
                     ${t.recur ? `<p>Repeats ${t.recur} until ${t.recur_until ? new Date(t.recur_until).toLocaleDateString('en-AU') : '—'}</p>` : ''}
                 </div>
             `)
-            .join('');
+                    .join('');
             });
         }
 
@@ -336,8 +352,19 @@
                     }
 
                     alert('Task updated successfully');
+
+                    // Move form back below the list to keep it from being deleted during task refresh
+                    const ul = document.getElementById('task-list');
+                    if (ul && editForm && ul.parentNode) {
+                    ul.parentNode.appendChild(editForm);
+                    }
+
                     editForm.style.display = 'none';
+                    if (currentFormParent) currentFormParent.classList.remove('editing');
+                    currentFormParent = null;
+
                     refreshEdit();
+
                 } catch (err) {
                     alert('Failed to update task: ' + err.message);
                 }
@@ -375,4 +402,5 @@
     </script>
     <script src="app.js"></script>
 </body>
+
 </html>

@@ -32,26 +32,27 @@
             password: fd.get('password')
         };
 
-        const res = await fetch('/api/auth/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body)
-        });
+        try {
+            const res = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
 
-        if (!res.ok) {
-            let msg = 'Login failed';
+            if (!res.ok) {
+                let msg = 'Login failed';
 
-            try {
-                const data = await res.json();
-                msg = data.message || (Array.isArray(data.errors) && data.errors[0]?.msg) || msg;
-            } catch { }
-            err.textContent = msg;
-            return;
+                try {
+                    const data = await res.json();
+                    msg = data.message || (Array.isArray(data.errors) && data.errors[0]?.msg) || msg;
+                } catch { }
+                err.textContent = msg;
+                return;
+            }
+            
+            window.location.href = getNextUrl();
+        } catch (ex) {
+            err.textContent = 'Network error. Please try again.';
         }
-
-        window.location.href = getNextUrl();
-    } catch (ex) {
-        err.textContent = 'Network error. Please try again.';
-    }
-    })
+    });
 })();

@@ -261,44 +261,8 @@ window.addEventListener('DOMContentLoaded', async () => {
       } else if (e.target.classList.contains('del')) {
         await deleteTask(id);
         await refresh();
-      } else if (e.target.classList.contains('edit')) {
+      } // edit code is handled in view-task.html scripting
 
-        const editForm = document.getElementById('edit-form');
-
-        if (!editForm) {
-          console.warn('No edit form on this page.');
-          return; // Do nothing on pages without the edit form.
-        }
-
-        // Fetch the task details from the API.
-        const task = await fetchTaskById(id);
-
-        const due = task.due_at || '';
-
-        // Populate the task editing form with API values.
-        document.getElementById('edit-task-id').value = task.id;
-        document.getElementById('edit-task-title').value = task.title || '';
-        document.getElementById('edit-task-desc').value = task.description || '';
-        document.getElementById('edit-task-priority').value = task.priority || 'medium';
-        document.getElementById('edit-date').value = task.due_at || '';
-        document.getElementById('edit-task-recurr').value = task.recur || 'none';
-        document.getElementById('edit-task-recurr-until').value = task.recur_until || '';
-        document.getElementById('edit-date').value = due ? String(due).slice(0, 10) : '';
-        document.getElementById('edit-task-status').value = task.status || 'todo';
-
-        // Move form below the selected task.
-        if (currentFormParent && currentFormParent !== li) {
-          currentFormParent.classList.remove('editing');
-        }
-        currentFormParent = li;
-        li.after(editForm);
-        editForm.style.display = 'block';
-        li.classList.add('editing');
-
-        editForm.scrollIntoView({ behavior: 'smooth', block: 'center' }); // Smooth scroll to form.
-
-      }
-      // Await refresh();
     } catch (err) {
       console.error(err);
       alert('Action failed: ' + (err?.message || 'See console'));
@@ -334,6 +298,8 @@ window.addEventListener('DOMContentLoaded', async () => {
         recur: recurr !== 'none' ? recurr : null,
         recur_until: recurrUntil ? new Date(recurrUntil).toISOString() : null
       };
+
+      console.log('Creating task with data:', newTask);
 
       try {
         const res = await fetch('/api/tasks', {
