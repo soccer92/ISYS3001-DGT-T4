@@ -156,7 +156,7 @@
                         ${t.due_at ? `<p><b>Due:</b> ${dd}</p>` : ''}
                         ${t.recur ? `<p class="recur-info">Repeats ${t.recur} until ${t.recur_until ? new Date(t.recur_until).toLocaleDateString('en-AU') : '—'}</p>` : ''}
                         <div class="task-actions">
-                            <button type="button" class="edit">Edit</button>
+                            <button type="button" class="edit" onclick="openEdit('${t.id}')">Edit</button>
                         </div>
                     </li>`;
             }).join('');
@@ -171,13 +171,21 @@
             if (typeof updateCompletionStatus === 'function') updateCompletionStatus();
         }
 
-        async function fetchTaskById(id) {
-            const res = await fetch(`/api/tasks/${id}`, { credentials: 'include' });
-            if (!res.ok) throw new Error(`Failed to load task ${id}`);
-            return res.json();
+        function openEdit(id) {
+            if (!lastTasks || !lastTasks.length) {
+                alert('Still loading tasks… please try again.');
+                return;
+            }
+            const task = lastTasks.find(t => String(t.id) === String(id));
+            if (!task) {
+                console.error('Task not in cache:', id);
+                alert('Could not open task for editing.');
+                return;
+            }
+            populateEditForm(task);
         }
 
-        function populateEditForm(task) {
+       function populateEditForm(task) {
             const editForm = document.getElementById('edit-form');
             document.getElementById('edit-task-id').value = task.id;
             document.getElementById('edit-task-title').value = task.title || '';
@@ -206,28 +214,6 @@
             const editTaskStatus = document.getElementById('edit-task-status');
             const cancelEdit = document.getElementById('cancel-edit');
             refreshEdit();
-
-            const ul = document.getElementById('task-list');
-            if (ul) {
-                ul.addEventListener('click', async (e) => {
-                    const btn = e.target.closest('button.edit');
-                    if (!btn) return;
-
-                    const li = btn.closest('li[data-id]');
-                    if (!li) return;
-
-                    const id = li.dataset.id;
-                    const task = (lastTasks || []).find(t => String(t.id) === String(id));
-
-                    if (!task) {
-                        console.error('Task not found in cache for id:', id);
-                        alert('Could not open task for editing.');
-                        return;
-                    }
-
-                    populateEditForm(task);
-                });
-            }
 
             editForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
