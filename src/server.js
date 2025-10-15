@@ -33,6 +33,8 @@ const HOST = process.env.HOST ?? 'localhost';
 app.use(express.json());
 app.use(cookieParser());
 
+app.use(express.static(path.join(__dirname, '../public')));
+
 // PUBLIC PATHS (no auth needed)
 const PUBLIC = [
     '/login.html',          // add '/register.html' once register html has been created
@@ -47,18 +49,14 @@ app.use((req, res, next) => {
 
     // Only guard non-API GET requests that accept HTML
     const isApi = req.path.startsWith('/api/');
-    const accepts = req.accepts(['html', 'json', 'text']);
-    const wantsHtmlPage = !isApi && req.method === 'GET' && accepts === 'html';
+    const wantsHtmlPage =
+        !isApi &&
+        req.method === 'GET' &&
+        (req.headers.accept?.includes('text/html') || req.path.endsWith('.html') || req.path === '/');
 
-    if (wantsHtmlPage) {
-        // Delegate to requireAuth, which will 302 to /login.html?next=...
-        return requireAuth(req, res, next);
-    }
+    if (wantsHtmlPage) return requireAuth(req, res, next);
     next();
 });
-
-// Server static files (index,html, app.js, style.css).
-app.use(express.static(path.join(__dirname, '../public')));
 
 // API routes.
 app.use('/api/tasks', requireAuth, tasksRouter);

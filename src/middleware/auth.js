@@ -22,8 +22,14 @@ function isApiRequest(req) {
 
 function wantsHTML(req) {
     // Treat GET non-API requests that accept HTML as “pages”
-    const accepts = req.accepts(['html', 'json', 'text']);
-    return !isApiRequest(req) && req.method === 'GET' && accepts === 'html';
+    const isApi = req.path.startsWith('/api/');
+    return (
+        !isApi &&
+        req.method === 'GET' &&
+        (req.headers.accept?.includes('text/html') ||
+            req.path.endsWith('.html') ||
+            req.path === '/')
+    );
 }
 
 function redirectToLogin(req, res) {
@@ -35,18 +41,20 @@ function redirectToLogin(req, res) {
 
 // Sign a JWT for the given payload
 export function signAuthCookie(res, payload) {
+    const isProd = process.env.NODE_ENV === 'production';
     const token = jwt.sign(payload, SECRET, { expiresIn: `${MAX_AGE_DAYS}d` });
     res.cookie(COOKIE, token, {
         httpOnly: true,
         sameSite: 'lax',
         secure: isProd, // Set true in production when serving over HTTPS
-        maxAge: MAX_AGE_DAYS * 24 * 60 * 60 * 1000
+        maxAge: MAX_AGE_DAYS * 24 * 60 * 60 * 1000,
+        path: '/',
     });
 }
 
 // Clear the auth cookie—used on logout.
 export function clearAuthCookie(res) {
-    res.clearCookie(COOKIE);
+    res.clearCookie(COOKIE, { path: '/' });
 }
 
 // Require a valid JWT before allowing access to the route.

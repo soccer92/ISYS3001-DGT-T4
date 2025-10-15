@@ -22,9 +22,18 @@
         return nextUrl;
     }
 
+    (async () => {
+        try {
+            const r = await fetch('/api/auth/me', { credentials: 'include' });
+            if (r.ok) window.location.href = getNextUrl();
+        } catch { }
+    })();
+
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         err.textContent = '';
+
+        if (err) { err.textContent = ''; err.style.display = 'none'; }
 
         const fd = new FormData(form);
         const body = {
@@ -36,7 +45,8 @@
             const res = await fetch('/api/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body)
+                body: JSON.stringify(body),
+                credentials: 'include'
             });
 
             if (!res.ok) {
