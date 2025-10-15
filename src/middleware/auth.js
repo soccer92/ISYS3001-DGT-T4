@@ -21,7 +21,7 @@ function isApiRequest(req) {
 }
 
 function wantsHTML(req) {
-    // Treat GET non-API requests that accept HTML as ìpagesî
+    // Treat GET non-API requests that accept HTML as ‚Äúpages‚Äù
     const accepts = req.accepts(['html', 'json', 'text']);
     return !isApiRequest(req) && req.method === 'GET' && accepts === 'html';
 }
@@ -39,12 +39,12 @@ export function signAuthCookie(res, payload) {
     res.cookie(COOKIE, token, {
         httpOnly: true,
         sameSite: 'lax',
-        secure: false, // Set true in production when serving over HTTPS
+        secure: isProd, // Set true in production when serving over HTTPS
         maxAge: MAX_AGE_DAYS * 24 * 60 * 60 * 1000
     });
 }
 
-// Clear the auth cookieóused on logout.
+// Clear the auth cookie‚Äîused on logout.
 export function clearAuthCookie(res) {
     res.clearCookie(COOKIE);
 }
